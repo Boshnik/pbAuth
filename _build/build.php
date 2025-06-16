@@ -120,12 +120,8 @@ class pbAuthPackage
             $package->save();
         }
 
-        $this->modx->log(modX::LOG_LEVEL_INFO, 'Package save.');
-
         if ($package->install()) {
-            $this->modx->log(modX::LOG_LEVEL_INFO, 'Package install.');
             $this->modx->runProcessor('system/clearcache');
-            $this->modx->log(modX::LOG_LEVEL_INFO, 'Package install success.');
         }
     }
 
@@ -181,14 +177,10 @@ class pbAuthPackage
         ]);
 
         /* zip up package */
-        $this->modx->log(modX::LOG_LEVEL_INFO, 'Packing up transport package zip...');
         $this->builder->pack();
-        $this->modx->log(modX::LOG_LEVEL_INFO, 'Packing up transport package zip success');
 
         if (!empty($this->config['install'])) {
-            $this->modx->log(modX::LOG_LEVEL_INFO, 'try installing package...');
             $this->install();
-            $this->modx->log(modX::LOG_LEVEL_INFO, 'Installing package success');
         }
 
         return $this->builder;
