@@ -3,7 +3,7 @@
 namespace PageBlocks\App\Http\Controllers\Auth;
 
 use PageBlocks\App\Http\Controllers\Controller;
-use Boshnik\PageBlocks\Facades\Request;
+use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PageBlocks\Support\Lang;
 
 class AuthController extends Controller

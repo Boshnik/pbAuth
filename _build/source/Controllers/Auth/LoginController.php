@@ -2,7 +2,7 @@
 
 namespace PageBlocks\App\Http\Controllers\Auth;
 
-use Boshnik\PageBlocks\Facades\Request;
+use Boshnik\PageBlocks\Http\Request;
 
 class LoginController extends AuthController
 {
