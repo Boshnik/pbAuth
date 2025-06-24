@@ -17,8 +17,8 @@ class ChangePasswordController extends AuthController
     public function changePassword(Request $request)
     {
         $request->validate([
-            'old_password' => 'required|min:8',
-            'password' => 'required|min:8|confirmed',
+            'old_password' => 'required|string|min:8',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $changed = $this->modx->user->changePassword($request->password, $request->old_password);

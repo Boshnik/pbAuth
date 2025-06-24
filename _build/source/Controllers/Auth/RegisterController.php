@@ -21,7 +21,7 @@ class RegisterController extends AuthController
             'honeypot' => 'empty',
             'username' => 'required|unique:modUser',
             'email' => 'required|email|unique:modUserProfile',
-            'password' => 'required|min:8|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $token = bin2hex(random_bytes(32));

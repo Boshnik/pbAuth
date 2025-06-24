@@ -18,8 +18,8 @@ class LoginController extends AuthController
     {
         $request->validate([
             'honeypot' => 'empty',
-            'username' => 'required',
-            'password' => 'required|min:8'
+            'username' => 'required|string',
+            'password' => 'required|string|min:8'
         ]);
 
         $user = $this->modx->getObject($this->userClassKey, ['username' => $request->username]);

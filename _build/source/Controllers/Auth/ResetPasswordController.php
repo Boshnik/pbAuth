@@ -31,7 +31,7 @@ class ResetPasswordController extends AuthController
         $request->validate([
             'honeypot' => 'empty',
             'token' => 'required|string',
-            'password' => 'required|min:8|confirmed',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
         $user = $this->modx->getObject($this->userClassKey, ['remote_key' => $request->token]);

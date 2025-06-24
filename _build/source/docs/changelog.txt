@@ -2,6 +2,9 @@
 
 ## [1.0.1-pb] - 2025-06-24
 
+### Improved
+ - Form validation
+
 ### Changed
  - Request import to Http\Request
 
