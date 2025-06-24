@@ -32,6 +32,7 @@ return [
     'signup_prompt' => 'Нет аккаунта?',
     'login_prompt' => 'Уже есть аккаунт?',
     'return_ro' => 'Или вернитесь к',
+    'delete_photo' => 'Удалить фото',
 
     'field_login' => 'Логин или Email',
     'field_username' => 'Имя',

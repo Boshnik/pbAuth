@@ -32,6 +32,7 @@ return [
     'signup_prompt' => 'Немає облікового запису?',
     'login_prompt' => 'Вже є обліковий запис?',
     'return_ro' => 'Або поверніться до',
+    'delete_photo' => 'Видалити фото',
 
     'field_login' => 'Логін або Email',
     'field_username' => 'Ім\'я',

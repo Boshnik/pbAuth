@@ -1,6 +1,9 @@
 # Changelog
 
-## [1.0.1-pb] - 2025-06-24
+## [1.0.1-pl] - 2025-06-25
+
+### Added
+ - Avatar upload
 
 ### Improved
  - Form validation

@@ -1,7 +1,7 @@
 {auth}
     <a href="{route 'pageProfile'}" class="d-flex align-items-center gap-2 text-dark text-decoration-none">
         <div class="avatar d-flex align-items-center justify-content-center rounded-5 bg-secondary-subtle overflow-hidden" style="width:48px;height:48px">
-            <img src="{$modx->user->getGravatar()}" width="48" height="48" alt="{$modx->user->username}">
+            <img src="{$modx->user->photo ?: $modx->user->getGravatar()}" width="48" height="48" alt="{$modx->user->username}">
         </div>
         <div class="d-flex flex-column">
             <strong>{$modx->user->username}</strong>

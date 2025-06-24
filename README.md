@@ -30,7 +30,6 @@ It's recommended to add one of the ready-made file chunks to your site header:
 
 
 ### TODO
- - Avatar upload
  - Two-factor authentication (2FA)
  - Authentication and registration via social networks
  - Adding users to groups

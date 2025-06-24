@@ -21,10 +21,17 @@ class ProfileController extends AuthController
 
         $validated = $request->validate([
             'username' => "required|unique:modUser,username,$user->id",
-            'email' => "required|email|unique:modUserProfile,email,$profile->id",
+            'email'    => "required|email|unique:modUserProfile,email,$profile->id",
             'fullname' => 'nullable|string',
-            'phone' => 'nullable|string',
+            'phone'    => 'nullable|string',
+            'photo'    => 'nullable|string',
+            'newphoto' => 'nullable|file|image|mimes:image/jpg,image/jpeg,image/png|max:2048|exclude',
         ]);
+
+        if ($request->hasFile('newphoto')) {
+            $photo = $request->file('newphoto')->store('assets/images/avatars/' . $user->id);
+            $validated['photo'] = $photo['url'];
+        }
 
         $user->fromArray($validated);
         $user->save();

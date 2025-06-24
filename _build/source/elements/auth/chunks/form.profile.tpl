@@ -1,6 +1,8 @@
-<form class="border rounded-4 p-5" action="{route 'updateProfile'}" method="post" data-pbform data-noclear>
+{set $photo = $modx->user->photo ?: $modx->user->getGravatar()}
+<form action="{route 'updateProfile'}" method="post" class="border rounded-4 p-5" id="auth-profile" enctype="multipart/form-data" data-pbform data-noclear>
     <input type="hidden" name="_token" value="{csrf_token}">
     <input type="hidden" name="honeypot" value="">
+    <input type="hidden" name="photo" value="{$photo}">
 
     <h3 class="text-center">{lang 'auth.form_profile_title'}</h3>
 
@@ -11,6 +13,19 @@
     {else}
         <p class="form-message text-center d-none" data-pbform-message></p>
     {/if}
+
+    <div class="form-group mb-3">
+        <div class="d-flex flex-column align-items-center gap-2 text-dark">
+            <div class="avatar d-flex align-items-center justify-content-center rounded-5 bg-secondary-subtle overflow-hidden">
+                <img src="{$photo}" width="64" height="64" id="auth-photo" alt="{$modx->user->username}">
+            </div>
+            <div class="d-flex flex-column mt-2">
+                <button type="button" class="btn btn-sm btn-danger" onclick="document.querySelector('#auth-profile [name=photo]').value = '';document.querySelector('#auth-newphoto').style='';this.remove()">{lang 'auth.delete_photo'}</button>
+                <input type="file" name="newphoto" class="form-control" id="auth-newphoto"{if $photo} style="display:none"{/if}>
+                <span class="invalid-feedback" data-error="newphoto">{$errors.newphoto}</span>
+            </div>
+        </div>
+    </div>
 
     <div class="form-group mb-3">
         <label class="mb-2" for="username">{lang 'auth.field_username'}</label>

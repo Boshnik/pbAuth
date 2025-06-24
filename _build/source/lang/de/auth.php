@@ -32,6 +32,7 @@ return [
     'signup_prompt' => 'Noch kein Konto?',
     'login_prompt' => 'Sie haben bereits ein Konto?',
     'return_ro' => 'Oder kehren Sie zurück zu',
+    'delete_photo' => 'Foto löschen',
 
     'field_login' => 'Benutzername oder E-Mail-Adresse',
     'field_username' => 'Name',
