@@ -8,6 +8,8 @@ pbAuth – a powerful authentication, registration, and user profile management 
  - Authentication and registration via POST requests
  - Password reset and change
  - User profile with editable data
+ - Avatar upload
+ - Adding users to groups
  - Validation and error display using Fenom
  - CSRF protection and flash messages support
  - Extendable controllers and templates
@@ -32,5 +34,4 @@ It's recommended to add one of the ready-made file chunks to your site header:
 ### TODO
  - Two-factor authentication (2FA)
  - Authentication and registration via social networks
- - Adding users to groups
  - Resending confirmation link if it was lost or not delivered

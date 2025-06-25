@@ -4,6 +4,7 @@
 
 ### Added
  - Avatar upload
+ - Automatic user group assignment during registration
 
 ### Improved
  - Form validation

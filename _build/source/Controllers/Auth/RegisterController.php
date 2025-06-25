@@ -7,6 +7,8 @@ use Boshnik\PageBlocks\Support\Mail;
 
 class RegisterController extends AuthController
 {
+    public array $userGroups = [];
+
     public function show()
     {
         return view('file:auth/templates/auth', [
@@ -41,14 +43,28 @@ class RegisterController extends AuthController
             return response()->error(lang('auth.register_error'));
         }
 
+        $this->setUserGroups($user);
+        $this->sendNotificationEmail($validated, $token);
+
+        return response()->success(lang('auth.register_success'));
+    }
+
+    private function setUserGroups($user): void
+    {
+        foreach ($this->userGroups as $group) {
+            $user->joinGroup($group);
+        }
+    }
+
+    private function sendNotificationEmail(array $validated, string $token): void
+    {
         $homePage = $this->modx->getOption('site_url');
         $validated['link'] = "{$homePage}verify-email/$token";
 
-        Mail::to($request->email)
+        Mail::to($validated['email'])
             ->subject(lang('auth.register_subject'))
             ->view('file:auth/chunks/email.verifyEmail', $validated)
             ->send();
-
-       return response()->success(lang('auth.register_success'));
     }
+
 }
