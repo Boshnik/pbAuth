@@ -23,15 +23,15 @@ class pbAuthPackage
         $this->modx->getService('error', 'error.modError');
 
         $root = dirname(__FILE__, 2) . '/';
+        $core = $root . 'core/components/' . $config['name_lower'] . '/';
         $this->config = array_merge([
-            'log_level' => modX::LOG_LEVEL_INFO,
-            'log_target' => XPDO_CLI_MODE ? 'ECHO' : 'HTML',
-
             'root' => $root,
+            'core' => $core,
             'build' => $root . '_build/',
             'elements' => $root . '_build/elements/',
             'resolvers' => $root . '_build/resolvers/',
-            'source' => $root . '_build/source/',
+            'log_level' => modX::LOG_LEVEL_INFO,
+            'log_target' => XPDO_CLI_MODE ? 'ECHO' : 'HTML',
         ], $config);
         unset($root);
 
@@ -127,30 +127,14 @@ class pbAuthPackage
 
     public function process()
     {
-        // Add elements
-        $elements = scandir($this->config['elements']);
-        foreach ($elements as $element) {
-            if (in_array($element[0], ['_', '.'])) {
-                continue;
-            }
-            $name = preg_replace('#\.php$#', '', $element);
-            if (method_exists($this, $name)) {
-                $this->{$name}();
-            }
-        }
-
         // Create main vehicle
         $vehicle = $this->builder->createVehicle($this->category, $this->category_attributes);
 
-        $files = include($this->config['elements'] . 'files.php');
-        if(!empty($files) && is_array($files)) {
-            foreach($files as $file) {
-                $vehicle->resolve('file', [
-                    'source' => $file['source'],
-                    'target' => $file['target']
-                ]);
-            }
-        }
+        // Files resolvers
+        $vehicle->resolve('file', [
+            'source' => $this->config['core'],
+            'target' => "return MODX_CORE_PATH . 'components/';",
+        ]);
 
         // Add resolvers into vehicle
         $resolvers = scandir($this->config['resolvers']);
@@ -168,11 +152,12 @@ class pbAuthPackage
 
         $this->modx->log(modX::LOG_LEVEL_INFO, 'Adding documentation...');
         $this->builder->setPackageAttributes([
-            'changelog' => file_get_contents($this->config['source'] . 'docs/changelog.txt'),
-            'license' => file_get_contents($this->config['source'] . 'docs/license.txt'),
-            'readme' => file_get_contents($this->config['source'] . 'docs/readme.txt'),
+            'changelog' => file_get_contents($this->config['core'] . 'docs/changelog.txt'),
+            'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
+            'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
             'requires' => [
                 'php' => '>=7.4',
+                'pageblocks' => '>2.7.2',
             ],
         ]);
 
