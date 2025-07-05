@@ -21,7 +21,7 @@ class ProfileController extends AuthController
 
         $validated = $request->validate([
             'username' => "required|unique:modUser,username,$user->id",
-            'email'    => "required|email|unique:modUserProfile,email,$profile->id",
+            'email'    => "required|email|unique:modUserProfile,email,internalKey,$profile->id",
             'fullname' => 'nullable|string',
             'phone'    => 'nullable|string',
             'photo'    => 'nullable|string',

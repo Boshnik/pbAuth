@@ -29,7 +29,7 @@ class ResetPasswordController extends AuthController
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'honeypot' => 'empty',
+            'honeypot' => 'empty|exclude',
             'token' => 'required|string',
             'password' => 'required|string|min:8|confirmed',
         ]);

@@ -1,4 +1,4 @@
-<form class="border rounded-4 p-5" action="{route 'forgotPassword'}" method="post" data-pbform>
+<form class="border rounded-4 p-5" action="{route 'forgotPassword'}" method="post" pb-form>
     <input type="hidden" name="_token" value="{csrf_token}">
     <input type="hidden" name="honeypot" value="">
 
@@ -6,11 +6,11 @@
     <p class="text-center px-5">{lang 'auth.form_forgot_password_subtitle'}</p>
 
     {if $success_message}
-        <p class="form-message text-center text-success" data-pbform-message>{$success_message}</p>
+        <p class="form-message text-center text-success" pb-message>{$success_message}</p>
     {elseif $error_message}
-        <p class="form-message text-center text-error text-danger" data-pbform-message>{$error_message}</p>
+        <p class="form-message text-center text-error text-danger" pb-message>{$error_message}</p>
     {else}
-        <p class="form-message text-center d-none" data-pbform-message></p>
+        <p class="form-message text-center d-none" pb-message></p>
     {/if}
 
     <div class="form-group mb-3">
@@ -20,7 +20,7 @@
     </div>
 
     <button type="submit" class="btn btn-dark w-100">
-        <span class="spinner spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
+        <span class="spinner spinner-border spinner-border-sm" pb-spinner style="display:none" aria-hidden="true"></span>
         <span role="status">{lang 'auth.form_forgot_password_submit'}</span>
     </button>
 

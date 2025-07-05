@@ -1,5 +1,5 @@
 {set $photo = $modx->user->photo ?: $modx->user->getGravatar()}
-<form action="{route 'updateProfile'}" method="post" class="border rounded-4 p-5" id="auth-profile" enctype="multipart/form-data" data-pbform data-noclear>
+<form action="{route 'updateProfile'}" method="post" class="border rounded-4 p-5" id="auth-profile" enctype="multipart/form-data" pb-form data-noclear>
     <input type="hidden" name="_token" value="{csrf_token}">
     <input type="hidden" name="honeypot" value="">
     <input type="hidden" name="photo" value="{$photo}">
@@ -7,11 +7,11 @@
     <h3 class="text-center">{lang 'auth.form_profile_title'}</h3>
 
     {if $success_message}
-        <p class="form-message text-center text-success" data-pbform-message>{$success_message}</p>
+        <p class="form-message text-center text-success" pb-message>{$success_message}</p>
     {elseif $error_message}
-        <p class="form-message text-center text-error text-danger" data-pbform-message>{$error_message}</p>
+        <p class="form-message text-center text-error text-danger" pb-message>{$error_message}</p>
     {else}
-        <p class="form-message text-center d-none" data-pbform-message></p>
+        <p class="form-message text-center d-none" pb-message></p>
     {/if}
 
     <div class="form-group mb-3">
@@ -52,7 +52,7 @@
     </div>
 
     <button type="submit" class="btn btn-dark w-100">
-        <span class="spinner spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
+        <span class="spinner spinner-border spinner-border-sm" pb-spinner style="display:none" aria-hidden="true"></span>
         <span role="status">{lang 'auth.form_profile_submit'}</span>
     </button>
 </form>

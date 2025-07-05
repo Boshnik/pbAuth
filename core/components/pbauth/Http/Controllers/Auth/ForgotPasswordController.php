@@ -18,7 +18,7 @@ class ForgotPasswordController extends AuthController
     public function forgotPassword(Request $request)
     {
         $validated = $request->validate([
-            'honeypot' => 'empty',
+            'honeypot' => 'empty|exclude',
             'email' => 'required|email|exists:modUserProfile',
         ]);
 
