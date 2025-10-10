@@ -169,7 +169,7 @@ class pbAuthPackage
             'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
             'requires' => [
                 'php' => '>=7.4',
-                'pageblocks' => '>2.7.2',
+                'pageblocks' => '>=2.8.3',
             ],
         ]);
 

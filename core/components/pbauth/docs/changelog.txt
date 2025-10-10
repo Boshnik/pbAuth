@@ -9,6 +9,9 @@
 ### Improved
  - `username` field validation during registration
 
+### Requirements
+ - Requires PageBlocks component version 2.8.3 or higher
+
 ## [1.0.2-pl] - 2025-07-05
 
 ### Added
