@@ -31,7 +31,7 @@ class RegisterController extends AuthController
         $recentCount = query('modUser')
             ->where([
                 'ip' => $ip,
-                'createdon:>' => date('Y-m-d H:i:s', strtotime('-1 hour'))
+                'createdon:>' => time() - 3600
             ])
             ->count();
 
