@@ -5,6 +5,9 @@
 ### Added
  - Google reCAPTCHA v3 support
 
+### Improved
+ - `username` field validation during registration
+
 ## [1.0.2-pl] - 2025-07-05
 
 ### Added

@@ -29,7 +29,7 @@ class RegisterController extends AuthController
 
         $validated = $request->validate([
             'honeypot' => 'empty|exclude',
-            'username' => 'required|unique:modUser',
+            'username' => 'required|alpha_dash:ascii|min:3|max:30|unique:modUser',
             'email' => 'required|email|unique:modUserProfile',
             'password' => 'required|string|min:8|confirmed',
         ]);
