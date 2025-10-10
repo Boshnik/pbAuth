@@ -14,7 +14,7 @@
 
     <div class="form-group mb-3">
         <label class="mb-2" for="old_password">{lang 'auth.field_current_password'}</label>
-        <input type="old_password" name="old_password" id="old_password" class="form-control{if $errors.old_password} is-invalid{/if}" required>
+        <input type="password" name="old_password" id="old_password" class="form-control{if $errors.old_password} is-invalid{/if}" required>
         <span class="invalid-feedback" data-error="old_password">{$errors.old_password}</span>
     </div>
 

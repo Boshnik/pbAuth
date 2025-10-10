@@ -11,14 +11,12 @@ class AuthController extends Controller
     public $userClassKey = \modUser::class;
     public $profileClassKey = \modUserProfile::class;
 
-    public function __construct()
+    public function __construct(\modX $modx)
     {
-        parent::__construct();
+        parent::__construct($modx);
 
         $this->modx->lexicon->load('core:default');
         $this->modx->lexicon->load('core:user');
-
-        Lang::setLocale('en');
     }
 
     public function getProccesorPath(string $name): string
