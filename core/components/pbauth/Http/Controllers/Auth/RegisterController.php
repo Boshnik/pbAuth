@@ -27,6 +27,18 @@ class RegisterController extends AuthController
             }
         }
 
+        $ip = $request->ip();
+        $recentCount = query('modUser')
+            ->where([
+                'ip' => $ip,
+                'createdon:>' => date('Y-m-d H:i:s', strtotime('-1 hour'))
+            ])
+            ->count();
+
+        if ($recentCount > 3) {
+            return response()->error('Too many registrations from your IP. Try again later.');
+        }
+
         $validated = $request->validate([
             'honeypot' => 'empty|exclude',
             'username' => 'required|alpha_dash:ascii|min:3|max:30|unique:modUser',
@@ -40,6 +52,7 @@ class RegisterController extends AuthController
             'class_key' => $user->class_key,
             'active' => 0,
             'remote_key' => $token,
+            'ip' => $ip,
             'values' => '[]'
         ]));
 

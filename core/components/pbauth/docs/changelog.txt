@@ -4,6 +4,7 @@
 
 ### Added
  - Google reCAPTCHA v3 support
+ - registration form validation by IP address — no more than 3 registrations per IP
 
 ### Improved
  - `username` field validation during registration
