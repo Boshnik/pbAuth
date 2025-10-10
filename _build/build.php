@@ -127,6 +127,18 @@ class pbAuthPackage
 
     public function process()
     {
+        // Add elements
+        $elements = scandir($this->config['elements']);
+        foreach ($elements as $element) {
+            if (in_array($element[0], ['_', '.'])) {
+                continue;
+            }
+            $name = preg_replace('#\.php$#', '', $element);
+            if (method_exists($this, $name)) {
+                $this->{$name}();
+            }
+        }
+
         // Create main vehicle
         $vehicle = $this->builder->createVehicle($this->category, $this->category_attributes);
 

@@ -10,6 +10,12 @@
     {*bootstrap*}
     <link href="//cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script async src="//cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {*ReCAPTCHA*}
+    {set $captcha_public_key = 'pbauth_recaptcha_public_key'|config}
+    {if $captcha_public_key}
+        <script src="https://www.google.com/recaptcha/api.js?render={$captcha_public_key}"></script>
+    {/if}
 </head>
 <body>
 

@@ -1,6 +1,7 @@
 <form class="border rounded-4 p-5" action="{route 'register'}" method="post" pb-form>
     <input type="hidden" name="_token" value="{csrf_token}">
     <input type="hidden" name="honeypot" value="">
+    <input type="hidden" name="g-recaptcha-response" data-action="register" data-key="{'pbauth_recaptcha_public_key'|config}" value="">
 
     <h3 class="text-center">{lang 'auth.form_register_title'}</h3>
     <p class="text-center px-5">{lang 'auth.form_register_subtitle'}</p>
