@@ -11,6 +11,7 @@ return [
     'old_password_error' => 'Altes Passwort ist falsch',
     'change_password_success' => 'Passwort erfolgreich geändert',
     'recaptcha_failed' => 'reCAPTCHA-Überprüfung fehlgeschlagen. Bitte versuchen Sie es erneut.',
+    'register_ip_error' => 'Zu viele Registrierungen von Ihrer IP. Bitte versuchen Sie es später erneut.',
 
     // Titel
     'reset_password_title' => 'Passwort zurücksetzen',

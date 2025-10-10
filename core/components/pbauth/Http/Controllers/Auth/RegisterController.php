@@ -36,7 +36,7 @@ class RegisterController extends AuthController
             ->count();
 
         if ($recentCount > 3) {
-            return response()->error('Too many registrations from your IP. Try again later.');
+            return response()->error(lang('auth.register_ip_error'));
         }
 
         $validated = $request->validate([

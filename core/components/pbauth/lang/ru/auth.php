@@ -11,6 +11,7 @@ return [
     'old_password_error' => 'Старый пароль введён неверно',
     'change_password_success' => 'Пароль успешно изменён',
     'recaptcha_failed' => 'Ошибка проверки reCAPTCHA. Попробуйте еще раз.',
+    'register_ip_error' => 'С вашего IP слишком много регистраций. Попробуйте позже.',
 
     // Title
     'reset_password_title' => 'Сброс пароля',

@@ -11,6 +11,7 @@ return [
     'old_password_error' => 'Старий пароль невірний',
     'change_password_success' => 'Пароль успішно змінено',
     'recaptcha_failed' => 'Помилка перевірки reCAPTCHA. Спробуйте ще раз.',
+    'register_ip_error' => 'З вашої IP-адреси занадто багато реєстрацій. Спробуйте пізніше.',
 
     // Title
     'reset_password_title' => 'Скидання пароля',
