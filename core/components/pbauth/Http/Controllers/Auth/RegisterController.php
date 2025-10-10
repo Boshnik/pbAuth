@@ -23,7 +23,7 @@ class RegisterController extends AuthController
         if (!empty($secret_key)) {
             $captcha = $request->input('g-recaptcha-response');
             if (empty($captcha) || !$this->verifyRecaptcha($captcha, $secret_key)) {
-                return response()->error('Captcha verification failed. Please try again.');
+                return response()->error(lang('auth.recaptcha_failed'));
             }
         }
 

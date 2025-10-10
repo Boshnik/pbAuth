@@ -10,6 +10,7 @@ return [
     'invalid_token' => 'Invalid Token',
     'old_password_error' => 'Old password is incorrect',
     'change_password_success' => 'Password successfully changed',
+    'recaptcha_failed' => 'reCAPTCHA verification failed. Please try again.',
 
     // Title
     'reset_password_title' => 'Reset Password',

@@ -10,6 +10,7 @@ return [
     'invalid_token' => 'Недійсний токен',
     'old_password_error' => 'Старий пароль невірний',
     'change_password_success' => 'Пароль успішно змінено',
+    'recaptcha_failed' => 'Помилка перевірки reCAPTCHA. Спробуйте ще раз.',
 
     // Title
     'reset_password_title' => 'Скидання пароля',

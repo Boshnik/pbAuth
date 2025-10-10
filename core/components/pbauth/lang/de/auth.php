@@ -10,6 +10,7 @@ return [
     'invalid_token' => 'Ungültiger Token',
     'old_password_error' => 'Altes Passwort ist falsch',
     'change_password_success' => 'Passwort erfolgreich geändert',
+    'recaptcha_failed' => 'reCAPTCHA-Überprüfung fehlgeschlagen. Bitte versuchen Sie es erneut.',
 
     // Titel
     'reset_password_title' => 'Passwort zurücksetzen',
