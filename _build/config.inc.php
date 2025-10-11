@@ -11,13 +11,13 @@ if (!defined('MODX_CORE_PATH')) {
 return [
     'name' => 'pbAuth',
     'name_lower' => 'pbauth',
-    'version' => '1.0.2',
+    'version' => '1.0.3',
     'release' => 'pl',
     // Install package to site right after build
     'install' => true,
     // Which elements should be updated on package upgrade
     'update' => [
-        'symlinks' => false
+        'symlinks' => true
     ],
     // Which elements should be static by default
     'static' => [],

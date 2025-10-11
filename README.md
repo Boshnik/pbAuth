@@ -13,7 +13,7 @@ pbAuth – a powerful authentication, registration, and user profile management 
  - Validation and error display using Fenom
  - CSRF protection and flash messages support
  - Extendable controllers and templates
-
+ - Registration form protection with Google reCAPTCHA v3
 
 ### Quick Start
 **1. Enabling Routing**
