@@ -33,6 +33,9 @@ It's recommended to add one of the ready-made file chunks to your site header:
 
 ### Extending
 
+Подробное руководство по-русски — [docs/guide.ru.md](core/components/pbauth/docs/guide.ru.md):
+что где лежит, как добавить поле, шаблон, событие или свой контроллер.
+
 Routes and controllers stay in the component, so a fix in them reaches every site on
 upgrade. What a site used to change by editing the copied controllers is configuration
 now. Create `core/App/config/pbauth.php` — the file belongs to the site, pbAuth only

@@ -120,8 +120,9 @@ class pbAuthPackage
             $package->save();
         }
 
+        $package->xpdo->packages['MODX\Revolution\\'] = $package->xpdo->packages['Revolution'];
         if ($package->install()) {
-            $this->modx->runProcessor('system/clearcache');
+            $this->modx->runProcessor('System/ClearCache');
         }
     }
 
@@ -142,6 +143,12 @@ class pbAuthPackage
         // Create main vehicle
         $vehicle = $this->builder->createVehicle($this->category, $this->category_attributes);
 
+        $preResolver = $this->config['resolvers'] . 'symlinks_before.php';
+        if (file_exists($preResolver)) {
+            $vehicle->resolve('php', ['source' => $preResolver]);
+            $this->modx->log(modX::LOG_LEVEL_INFO, 'Added pre-resolver: symlinks_before');
+        }
+
         // Files resolvers
         $vehicle->resolve('file', [
             'source' => $this->config['core'],
@@ -151,26 +158,24 @@ class pbAuthPackage
         // Add resolvers into vehicle
         $resolvers = scandir($this->config['resolvers']);
         foreach ($resolvers as $resolver) {
-            if (in_array($resolver[0], ['_', '.'])) {
-                continue;
-            }
+            if (in_array($resolver[0], ['_', '.'])) continue;
+            if ($resolver === 'symlinks_before.php') continue;
             if ($vehicle->resolve('php', ['source' => $this->config['resolvers'] . $resolver])) {
-                $this->modx->log(modX::LOG_LEVEL_INFO, 'Added resolver ' . preg_replace('#\.php$#', '', $resolver));
-            } else {
-                $this->modx->log(modX::LOG_LEVEL_INFO, 'Could not add resolver "' . $resolver . '" to category.');
+                $this->modx->log(modX::LOG_LEVEL_INFO, 'Added resolver: ' . preg_replace('#\.php$#', '', $resolver));
             }
         }
+
         $this->builder->putVehicle($vehicle);
 
         $this->modx->log(modX::LOG_LEVEL_INFO, 'Adding documentation...');
+
         $this->builder->setPackageAttributes([
             'changelog' => file_get_contents($this->config['core'] . 'docs/changelog.txt'),
             'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
             'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
             'requires' => [
                 'php' => '>=8.0',
-                // Route::addRoutesPath(), без которой компонент не смог бы
-                // подавать свои роуты, есть только в PageBlocks 3.
+                'modx' => '>=3.0.0',
                 'pageblocks' => '>=3.0',
             ],
         ]);

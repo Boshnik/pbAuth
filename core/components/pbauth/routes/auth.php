@@ -3,11 +3,6 @@
 use Boshnik\PageBlocks\Facades\Route;
 use Boshnik\PbAuth\Support\Controllers;
 
-// Пара [класс, метод], а не строка 'Auth\LoginController@show': строковую форму
-// роутер разворачивает в PageBlocks\App\Http\Controllers\, то есть только в
-// site-owned слой. Класс берётся из конфига, поэтому сайт может подставить свой
-// наследник, не трогая эти роуты.
-
 Route::middleware('guest')->group(function () {
     Route::get('/login', Controllers::action('login', 'show'))->name('pageLogin');
     Route::post('/login', Controllers::action('login', 'login'))->name('login');
