@@ -16,7 +16,10 @@
 if ($transport->xpdo) {
     $modx =& $transport->xpdo;
 
-    $appFolders = ['Http', 'routes', 'elements', 'lang'];
+    $appFolders = ['Http', 'elements', 'lang'];
+    // Больше не раскладывается в App/: роуты компонент подаёт из своего каталога
+    // через Route::addRoutesPath() в bootstrap.php.
+    $retired = ['routes/auth.php'];
     $core = MODX_CORE_PATH . 'components/pbauth/';
     $target = MODX_CORE_PATH . 'App/';
     $manifestFile = $target . '.pbauth-installed.json';
@@ -35,8 +38,12 @@ if ($transport->xpdo) {
                 }
                 pbauthCopyMissing($source, $target . $folder, $folder, $manifest, $copied, $kept);
             }
+            $retracted = pbauthRetract($retired, $core, $target, $manifest);
             pbauthWriteManifest($manifestFile, $manifest);
             $modx->log(modX::LOG_LEVEL_INFO, "[pbAuth] Скопировано файлов: {$copied}, оставлено файлов сайта: {$kept}.");
+            foreach ($retracted as $relative) {
+                $modx->log(modX::LOG_LEVEL_INFO, "[pbAuth] Удалена своя неизменённая копия App/{$relative} — файл теперь подаётся из компонента.");
+            }
             break;
 
         case xPDOTransport::ACTION_UNINSTALL:
@@ -148,6 +155,40 @@ function pbauthCopyMissing(
             $kept++;
         }
     }
+}
+
+/**
+ * Убирает из App/ файлы, которые компонент туда больше не кладёт.
+ *
+ * Удаляется только собственная нетронутая копия: та, что числится в манифесте с
+ * прежним хешем, либо совпадает с поставочной байт в байт. Правленый сайтом файл
+ * остаётся — bootstrap.php увидит его и уступит ему дорогу.
+ *
+ * @return string[] пути, которые действительно удалены
+ */
+function pbauthRetract(array $retired, string $core, string $target, array &$manifest): array
+{
+    $removed = [];
+
+    foreach ($retired as $relative) {
+        $path = $target . $relative;
+        if (!is_file($path)) {
+            unset($manifest[$relative]);
+            continue;
+        }
+
+        $hash = sha1_file($path);
+        $shipped = $core . $relative;
+        $isOurs = (isset($manifest[$relative]) && $manifest[$relative] === $hash)
+            || (is_file($shipped) && sha1_file($shipped) === $hash);
+
+        if ($isOurs && unlink($path)) {
+            $removed[] = $relative;
+        }
+        unset($manifest[$relative]);
+    }
+
+    return $removed;
 }
 
 function pbauthRemoveEmptyDirs(string $directory): void

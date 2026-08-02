@@ -31,6 +31,20 @@ It's recommended to add one of the ready-made file chunks to your site header:
  - **auth_modal** - modal window (if you want to embed forms without separate pages)
 
 
+### Files and updates
+
+Routes ship with the component (`core/components/pbauth/routes/`) and are registered
+from `bootstrap.php` via `Route::addRoutesPath()`, so a fix in them reaches every site
+on upgrade. If `core/App/routes/auth.php` exists, the site's copy wins and the
+component keeps its own routes out of the table — delete that file to switch over. An
+upgrade removes it for you when it is still byte-identical to the shipped one.
+
+Controllers, templates and language files are copied into the site-owned `core/App/`.
+Neither install nor upgrade ever overwrites an existing file there: once it is in
+`App/`, it belongs to the site. What the installer actually placed is recorded in
+`core/App/.pbauth-installed.json` with hashes, and uninstall removes only the entries
+that still match — anything you edited stays.
+
 ### TODO
  - Two-factor authentication (2FA)
  - Authentication and registration via social networks
