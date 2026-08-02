@@ -43,6 +43,16 @@ if ($transport->xpdo) {
                 }
                 pbauthCopyMissing($source, $target . $folder, $folder, $manifest, $copied, $kept);
             }
+            // Пустая заготовка конфига, чтобы сайту не пришлось выяснять, как он
+            // называется и где лежит. Все секции в ней закомментированы, так что
+            // до первой правки она ничего не меняет.
+            pbauthSeedFile(
+                $core . 'docs/pbauth.config.example.php',
+                $target . 'config/pbauth.php',
+                'config/pbauth.php',
+                $manifest,
+                $copied
+            );
             $retracted = pbauthRetract($retired, $core, $target, $manifest);
             pbauthWriteManifest($manifestFile, $manifest);
             $modx->log(modX::LOG_LEVEL_INFO, "[pbAuth] Скопировано файлов: {$copied}, оставлено файлов сайта: {$kept}.");
@@ -159,6 +169,34 @@ function pbauthCopyMissing(
         } else {
             $kept++;
         }
+    }
+}
+
+/**
+ * Кладёт один файл под своим именем, если его ещё нет.
+ *
+ * От pbauthCopyMissing отличается тем, что имя в App/ не совпадает с исходным:
+ * образец конфига становится боевым конфигом сайта.
+ */
+function pbauthSeedFile(
+    string $source,
+    string $targetPath,
+    string $relative,
+    array &$manifest,
+    int &$copied
+): void {
+    if (!is_file($source) || file_exists($targetPath)) {
+        return;
+    }
+
+    $folder = dirname($targetPath);
+    if (!is_dir($folder)) {
+        mkdir($folder, 0755, true);
+    }
+
+    if (copy($source, $targetPath)) {
+        $manifest[$relative] = sha1_file($targetPath);
+        $copied++;
     }
 }
 

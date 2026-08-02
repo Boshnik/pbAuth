@@ -85,9 +85,7 @@ class Config
     protected static function merge(array $defaults, array $site): array
     {
         foreach ($site as $key => $value) {
-            if (is_array($value) && isset($defaults[$key]) && is_array($defaults[$key])
-                && !static::isList($value) && !static::isList($defaults[$key])
-            ) {
+            if (is_array($value) && isset($defaults[$key]) && static::isDictionary($defaults[$key])) {
                 $defaults[$key] = static::merge($defaults[$key], $value);
                 continue;
             }
@@ -97,8 +95,17 @@ class Config
         return $defaults;
     }
 
-    protected static function isList(array $array): bool
+    /**
+     * Решает только поставочная сторона.
+     *
+     * Иначе пустая секция у сайта (`'rules' => []` — а именно так выглядит
+     * незаполненный образец конфига) сама считалась бы списком и стирала бы все
+     * поставочные правила.
+     */
+    protected static function isDictionary($value): bool
     {
-        return $array === [] || array_keys($array) === range(0, count($array) - 1);
+        return is_array($value)
+            && $value !== []
+            && array_keys($value) !== range(0, count($value) - 1);
     }
 }
