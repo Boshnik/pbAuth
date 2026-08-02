@@ -1,5 +1,49 @@
 # Changelog
 
+## [1.1.0-pl] - 2026-08-02
+
+### Changed
+ - routes and controllers now live in the component instead of being copied into
+   `core/App/`, so fixes reach existing sites on upgrade. Routes are registered
+   from `bootstrap.php` via `Route::addRoutesPath()`
+ - what the site used to change by editing the copied controllers is now
+   configuration: templates, form chunks, validation rules, redirects, user
+   groups and controller class overrides live in `core/App/config/pbauth.php`
+   (sample in `docs/pbauth.config.example.php`)
+ - install no longer overwrites files already present in `core/App/`; it behaves
+   like upgrade and only fills in what is missing
+ - `lexicon/` is no longer copied into `core/App/` — it belongs to the manager
+
+### Added
+ - events the site hooks into without touching component code:
+   `pbAuthUserSaving`, `pbAuthAfterRegister`, `pbAuthAfterLogin`,
+   `pbAuthAfterLogout`, `pbAuthAfterProfileUpdate`, `pbAuthAfterVerifyEmail`,
+   `pbAuthAfterResetPassword`, `pbAuthAfterChangePassword`. Listeners are
+   registered in `App/config/pbauth.php`; the matching MODX system event is
+   invoked as well
+ - `?redirect=` on the login form, restricted to paths inside the site
+
+### Fixed
+ - uninstall deleted every file named `auth.php` and every `auth`/`Auth` folder
+   under `core/App/`, which on a real site also meant the site's own routes,
+   lexicons and controllers. It now removes only what the installer recorded in
+   `core/App/.pbauth-installed.json` and only while the file is unchanged
+ - `unique:modUser` / `exists:modUserProfile` never matched anything: the
+   validator queries a table, not a MODX class. Now `users` / `user_attributes`,
+   so duplicate usernames and emails are actually rejected
+ - the "3 registrations per IP" limit counted on `modUser.ip`, a column MODX 3
+   does not have. Counted in the cache now
+ - `AuthController::$modxVersion` was never set, so the MODX 2 processor paths
+   were used on MODX 3
+
+### Upgrading
+ - the upgrade deletes `App/routes/auth.php` when it is still byte-identical to
+   the shipped one. If you edited it, it stays and keeps working — pbAuth then
+   leaves its own routes unregistered, so nothing is duplicated. Delete the file
+   (and `App/Http/Controllers/Auth/`) once you have moved your changes into
+   `App/config/pbauth.php`
+ - requires PageBlocks 3.0 or higher
+
 ## [1.0.3-pl] - 2025-10-11
 
 ### Added

@@ -1,26 +1,23 @@
 <?php
 
-namespace PageBlocks\App\Http\Controllers\Auth;
+namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PageBlocks\Support\Mail;
+use Boshnik\PbAuth\Support\Config;
 
 class ForgotPasswordController extends AuthController
 {
     public function show()
     {
-        return view('file:auth/templates/auth', [
+        return $this->page('auth', 'forgot_password', [
             'title' => lang('auth.forgot_password_title'),
-            'form' => 'form.forgotPassword'
         ]);
     }
 
     public function forgotPassword(Request $request)
     {
-        $validated = $request->validate([
-            'honeypot' => 'empty|exclude',
-            'email' => 'required|email|exists:modUserProfile',
-        ]);
+        $validated = $request->validate(Config::rules('forgot_password'));
 
         $token = bin2hex(random_bytes(32));
         $expires = strtotime('+1 hour');
@@ -39,11 +36,9 @@ class ForgotPasswordController extends AuthController
 
         Mail::to($request->email)
             ->subject(lang('auth.reset_password_subject'))
-            ->view('file:auth/chunks/email.resetPassword.tpl', $validated)
+            ->view('file:auth/chunks/email.resetPassword', $validated)
             ->send();
 
         return response()->success(lang('auth.forgot_password_success'));
     }
-
-
 }

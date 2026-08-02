@@ -1,19 +1,23 @@
 <?php
 
-namespace PageBlocks\App\Http\Controllers\Auth;
+namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
+use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PbAuth\Support\Config;
 use PageBlocks\App\Http\Controllers\Controller;
-use Boshnik\PageBlocks\Http\Request;
-use Boshnik\PageBlocks\Support\Lang;
 
 class AuthController extends Controller
 {
     public $userClassKey = \modUser::class;
     public $profileClassKey = \modUserProfile::class;
 
+    protected int $modxVersion = 3;
+
     public function __construct(\modX $modx)
     {
         parent::__construct($modx);
+
+        $this->modxVersion = (int)($this->modx->getVersionData()['version'] ?? 3);
 
         $this->modx->lexicon->load('core:default');
         $this->modx->lexicon->load('core:user');
@@ -27,6 +31,25 @@ class AuthController extends Controller
         ];
 
         return $map[$name][$this->modxVersion === 3 ? 1 : 0] ?? '';
+    }
+
+    /**
+     * Страница компонента: шаблон-обёртка и чанк формы берутся из конфига,
+     * чтобы сайт менял вёрстку, не переписывая контроллер.
+     */
+    protected function page(string $view, string $action, array $data = [])
+    {
+        $form = Config::get("forms.$action");
+        if ($form !== null && !array_key_exists('form', $data)) {
+            $data['form'] = $form;
+        }
+
+        return view(Config::get("views.$view"), $data);
+    }
+
+    protected function redirectTo(string $action, string $default = '/'): string
+    {
+        return Config::get("redirects.$action", $default);
     }
 
     public function getContexts(): array
@@ -48,6 +71,22 @@ class AuthController extends Controller
         return array_values($addContexts);
     }
 
+    /**
+     * Логинит пользователя в текущем контексте и во всех дополнительных.
+     */
+    protected function authenticate($user): void
+    {
+        $this->modx->user = $user;
+        $this->modx->getUser();
+
+        $defaultContext = $this->modx->context->key ?? 'web';
+        $_SESSION['modx.user.contextTokens'][$defaultContext] = $user->id;
+
+        foreach ($this->getContexts() as $context) {
+            $_SESSION['modx.user.contextTokens'][$context] = $user->id;
+        }
+    }
+
     public function verifyEmail(string $token)
     {
         if (!$user = $this->modx->getObject($this->userClassKey, ['remote_key' => $token])) {
@@ -63,19 +102,13 @@ class AuthController extends Controller
         $user->set('remote_data', null);
         $user->save();
 
-        $this->modx->user = $user;
-        $this->modx->getUser();
+        $this->authenticate($user);
 
-        $defaultContext = $this->modx->context->key ?? 'web';
-        $_SESSION['modx.user.contextTokens'][$defaultContext] = $user->id;
+        Dispatcher::fire(Dispatcher::AFTER_VERIFY_EMAIL, ['user' => $user]);
 
-        $contexts = $this->getContexts();
-        foreach ($contexts as $context) {
-            $_SESSION['modx.user.contextTokens'][$context] = $user->id;
-        }
-
-        return redirect('/');
+        return redirect($this->redirectTo('verify_email'));
     }
+
     public function getProcessorError($response)
     {
         $errors = [];

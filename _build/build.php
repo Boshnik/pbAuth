@@ -168,8 +168,10 @@ class pbAuthPackage
             'license' => file_get_contents($this->config['core'] . 'docs/license.txt'),
             'readme' => file_get_contents($this->config['core'] . 'docs/readme.txt'),
             'requires' => [
-                'php' => '>=7.4',
-                'pageblocks' => '>=2.8.3',
+                'php' => '>=8.0',
+                // Route::addRoutesPath(), без которой компонент не смог бы
+                // подавать свои роуты, есть только в PageBlocks 3.
+                'pageblocks' => '>=3.0',
             ],
         ]);
 

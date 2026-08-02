@@ -1,26 +1,23 @@
 <?php
 
-namespace PageBlocks\App\Http\Controllers\Auth;
+namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
+use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PbAuth\Support\Config;
 
 class LoginController extends AuthController
 {
     public function show()
     {
-        return view('file:auth/templates/auth', [
+        return $this->page('auth', 'login', [
             'title' => lang('auth.login_title'),
-            'form' => 'form.login'
         ]);
     }
 
     public function login(Request $request)
     {
-        $request->validate([
-            'honeypot' => 'empty',
-            'username' => 'required|string',
-            'password' => 'required|string|min:8'
-        ]);
+        $request->validate(Config::rules('login'));
 
         $user = $this->modx->getObject($this->userClassKey, ['username' => $request->username]);
         if (!$user) {
@@ -48,12 +45,40 @@ class LoginController extends AuthController
             return $this->getProcessorError($response);
         }
 
-        return response()->success('', '/');
+        Dispatcher::fire(Dispatcher::AFTER_LOGIN, ['user' => $user]);
+
+        return response()->success('', $this->loginRedirect($request));
     }
 
     public function logout()
     {
+        $user = $this->modx->user;
         $this->modx->runProcessor($this->getProccesorPath('logout'));
-        return redirect('/');
+
+        Dispatcher::fire(Dispatcher::AFTER_LOGOUT, ['user' => $user]);
+
+        return redirect($this->redirectTo('logout'));
+    }
+
+    /**
+     * Форма может попросить вернуть пользователя туда, откуда его завернули на
+     * вход. Принимается только путь внутри сайта — со схемой, хостом или
+     * протокол-относительным `//host` форма стала бы открытым редиректом.
+     */
+    protected function loginRedirect(Request $request): string
+    {
+        $default = $this->redirectTo('login');
+        $param = Config::get('login_redirect_param');
+
+        if (empty($param)) {
+            return $default;
+        }
+
+        $target = trim((string)$request->get($param, ''));
+        if ($target === '' || str_starts_with($target, '//') || preg_match('#^[a-z][a-z0-9+.-]*:#i', $target)) {
+            return $default;
+        }
+
+        return '/' . ltrim($target, '/');
     }
 }

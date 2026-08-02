@@ -1,8 +1,10 @@
 <?php
 
-namespace PageBlocks\App\Http\Controllers\Auth;
+namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
+use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PbAuth\Support\Config;
 
 class ResetPasswordController extends AuthController
 {
@@ -19,20 +21,15 @@ class ResetPasswordController extends AuthController
             return redirect(route('pageForgotPassword'));
         }
 
-        return view('file:auth/templates/auth', [
+        return $this->page('auth', 'reset_password', [
             'title' => lang('auth.reset_password_title'),
-            'form' => 'form.resetPassword',
             'token' => $token,
         ]);
     }
 
     public function resetPassword(Request $request)
     {
-        $request->validate([
-            'honeypot' => 'empty|exclude',
-            'token' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $request->validate(Config::rules('reset_password'));
 
         $user = $this->modx->getObject($this->userClassKey, ['remote_key' => $request->token]);
         if (!$user) {
@@ -54,7 +51,8 @@ class ResetPasswordController extends AuthController
             return $this->getProcessorError($response);
         }
 
-        return response()->success('', '/');
-    }
+        Dispatcher::fire(Dispatcher::AFTER_RESET_PASSWORD, ['user' => $user]);
 
+        return response()->success('', $this->redirectTo('reset_password'));
+    }
 }

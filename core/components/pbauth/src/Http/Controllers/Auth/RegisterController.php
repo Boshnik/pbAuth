@@ -1,19 +1,18 @@
 <?php
 
-namespace PageBlocks\App\Http\Controllers\Auth;
+namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PageBlocks\Support\Mail;
+use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PbAuth\Support\Config;
 
 class RegisterController extends AuthController
 {
-    public array $userGroups = [];
-
     public function show()
     {
-        return view('file:auth/templates/auth', [
+        return $this->page('auth', 'register', [
             'title' => lang('auth.register_title'),
-            'form' => 'form.register'
         ]);
     }
 
@@ -28,43 +27,51 @@ class RegisterController extends AuthController
         }
 
         $ip = $request->ip();
-        $recentCount = query('modUser')
-            ->where([
-                'ip' => $ip,
-                'createdon:>' => time() - 3600
-            ])
-            ->count();
+        $limit = (int)Config::get('register_ip_limit', 0);
+        $attemptsKey = "pbauth_register_attempts:$ip";
+        $attempts = (int)cache($attemptsKey);
 
-        if ($recentCount > 3) {
+        if ($limit > 0 && $attempts >= $limit) {
             return response()->error(lang('auth.register_ip_error'));
         }
 
-        $validated = $request->validate([
-            'honeypot' => 'empty|exclude',
-            'username' => 'required|alpha_dash:ascii|min:3|max:30|unique:modUser',
-            'email' => 'required|email|unique:modUserProfile',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $validated = $request->validate(Config::rules('register'));
 
         $token = bin2hex(random_bytes(32));
+
         $user = $this->modx->newObject($this->userClassKey);
         $user->fromArray(array_merge($validated, [
             'class_key' => $user->class_key,
             'active' => 0,
             'remote_key' => $token,
-            'ip' => $ip,
-            'values' => '[]'
         ]));
 
         $profile = $this->modx->newObject($this->profileClassKey);
         $profile->fromArray($validated);
         $user->addOne($profile, 'Profile');
 
+        Dispatcher::fire(Dispatcher::USER_SAVING, [
+            'user' => $user,
+            'profile' => $profile,
+            'validated' => $validated,
+            'action' => 'register',
+        ]);
+
         if (!$user->save()) {
             return response()->error(lang('auth.register_error'));
         }
 
+        if ($limit > 0) {
+            cache($attemptsKey, $attempts + 1, 3600);
+        }
+
         $this->setUserGroups($user);
+
+        Dispatcher::fire(Dispatcher::AFTER_REGISTER, [
+            'user' => $user,
+            'profile' => $profile,
+            'validated' => $validated,
+        ]);
 
         $this->sendNotificationEmail([
             'username' => $validated['username'],
@@ -75,14 +82,14 @@ class RegisterController extends AuthController
         return response()->success(lang('auth.register_success'));
     }
 
-    protected  function setUserGroups($user): void
+    protected function setUserGroups($user): void
     {
-        foreach ($this->userGroups as $group) {
+        foreach (Config::get('user_groups', []) as $group) {
             $user->joinGroup($group);
         }
     }
 
-    protected  function sendNotificationEmail(array $data): void
+    protected function sendNotificationEmail(array $data): void
     {
         $username = htmlspecialchars($data['username'] ?? '', ENT_QUOTES, 'UTF-8');
         $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
@@ -133,5 +140,4 @@ class RegisterController extends AuthController
         $result = json_decode($response, true);
         return isset($result['success']) && $result['success'] === true && $result['score'] >= 0.5;
     }
-
 }

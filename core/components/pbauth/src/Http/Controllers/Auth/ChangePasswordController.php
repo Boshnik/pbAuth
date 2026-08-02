@@ -1,25 +1,23 @@
 <?php
 
-namespace PageBlocks\App\Http\Controllers\Auth;
+namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
+use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PbAuth\Support\Config;
 
 class ChangePasswordController extends AuthController
 {
     public function show()
     {
-        return view('file:auth/templates/profile', [
+        return $this->page('profile', 'change_password', [
             'title' => lang('auth.change_password_title'),
-            'form' => 'form.changePassword'
         ]);
     }
 
     public function changePassword(Request $request)
     {
-        $request->validate([
-            'old_password' => 'required|string|min:8',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+        $request->validate(Config::rules('change_password'));
 
         $changed = $this->modx->user->changePassword($request->password, $request->old_password);
         if (!$changed) {
@@ -28,7 +26,8 @@ class ChangePasswordController extends AuthController
             ]);
         }
 
+        Dispatcher::fire(Dispatcher::AFTER_CHANGE_PASSWORD, ['user' => $this->modx->user]);
+
         return response()->success(lang('auth.change_password_success'));
     }
-
 }

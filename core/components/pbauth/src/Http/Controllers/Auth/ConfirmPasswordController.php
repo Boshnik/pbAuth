@@ -1,26 +1,22 @@
 <?php
 
-namespace PageBlocks\App\Http\Controllers\Auth;
+namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
-use Boshnik\PageBlocks\Support\Mail;
+use Boshnik\PbAuth\Support\Config;
 
 class ConfirmPasswordController extends AuthController
 {
     public function show()
     {
-        return view('file:auth/templates/auth', [
+        return $this->page('auth', 'confirm_password', [
             'title' => lang('auth.confirm_password_title'),
-            'form' => 'form.confirmPassword',
         ]);
     }
 
     public function confirmPassword(Request $request)
     {
-        $request->validate([
-            'honeypot' => 'empty',
-            'password' => 'required|string|min:8',
-        ]);
+        $request->validate(Config::rules('confirm_password'));
 
         if (!$this->modx->user->passwordMatches($request->password)) {
             return response()->error('', [
@@ -30,5 +26,4 @@ class ConfirmPasswordController extends AuthController
 
         return response()->success(lang('auth.user_confirm_password_success'));
     }
-
 }

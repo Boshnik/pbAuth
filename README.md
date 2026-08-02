@@ -31,19 +31,50 @@ It's recommended to add one of the ready-made file chunks to your site header:
  - **auth_modal** - modal window (if you want to embed forms without separate pages)
 
 
+### Extending
+
+Routes and controllers stay in the component, so a fix in them reaches every site on
+upgrade. What a site used to change by editing the copied controllers is configuration
+now. Create `core/App/config/pbauth.php` — the file belongs to the site, pbAuth only
+reads it — and override just what differs from
+`core/components/pbauth/config/defaults.php`. A sample is in
+`docs/pbauth.config.example.php`.
+
+```php
+return [
+    'views'   => ['profile' => 'file:templates/profile'],
+    'rules'   => ['profile' => ['phone' => 'required|string', 'fullname' => null]],
+    'listeners' => [
+        \Boshnik\PbAuth\Events\Dispatcher::USER_SAVING => [MyExtendedFields::class],
+    ],
+];
+```
+
+`rules` is merged field by field: an unknown field is added, a known one replaced,
+`null` drops a shipped one. When the change is behaviour rather than data, hook an
+event — `pbAuthUserSaving`, `pbAuthAfterRegister`, `pbAuthAfterLogin`,
+`pbAuthAfterLogout`, `pbAuthAfterProfileUpdate`, `pbAuthAfterVerifyEmail`,
+`pbAuthAfterResetPassword`, `pbAuthAfterChangePassword`. A listener is a class with
+`handle(array $params, string $event)` or any callable; an exception in one is logged
+and does not abort the action. The matching MODX system event is invoked as well, so
+plugins can listen too — but listeners in the config need no re-attaching after a
+deploy. When even that is not enough, subclass the shipped controller and name your
+class in `controllers` — the component's routes start pointing at it.
+
 ### Files and updates
 
-Routes ship with the component (`core/components/pbauth/routes/`) and are registered
-from `bootstrap.php` via `Route::addRoutesPath()`, so a fix in them reaches every site
-on upgrade. If `core/App/routes/auth.php` exists, the site's copy wins and the
-component keeps its own routes out of the table — delete that file to switch over. An
-upgrade removes it for you when it is still byte-identical to the shipped one.
-
-Controllers, templates and language files are copied into the site-owned `core/App/`.
-Neither install nor upgrade ever overwrites an existing file there: once it is in
-`App/`, it belongs to the site. What the installer actually placed is recorded in
+Templates and language files are copied into the site-owned `core/App/`: every site
+draws them differently and no amount of polymorphism helps there. Neither install nor
+upgrade ever overwrites an existing file — once it is in `App/`, it belongs to the
+site. What the installer actually placed is recorded in
 `core/App/.pbauth-installed.json` with hashes, and uninstall removes only the entries
-that still match — anything you edited stays.
+that still match, so anything you edited stays.
+
+If `core/App/routes/auth.php` exists, the site is left on the old layout entirely:
+its routes and its controllers in `App/Http/Controllers/Auth/` keep working and the
+component registers nothing, so no URI is served twice. An upgrade removes that file
+when it is still byte-identical to the shipped one; otherwise delete it yourself once
+your changes have moved into `App/config/pbauth.php`.
 
 ### TODO
  - Two-factor authentication (2FA)

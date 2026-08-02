@@ -16,10 +16,15 @@
 if ($transport->xpdo) {
     $modx =& $transport->xpdo;
 
-    $appFolders = ['Http', 'elements', 'lang'];
-    // Больше не раскладывается в App/: роуты компонент подаёт из своего каталога
-    // через Route::addRoutesPath() в bootstrap.php.
-    $retired = ['routes/auth.php'];
+    // В App/ раскладывается только то, что каждый сайт всё равно рисует по-своему.
+    $appFolders = ['elements', 'lang'];
+    // Роуты и контроллеры теперь живут в компоненте: роуты подаются через
+    // Route::addRoutesPath() из bootstrap.php, контроллеры настраиваются через
+    // App/config/pbauth.php. Свои нетронутые копии в App/ компонент убирает.
+    $retired = array_merge(['routes/auth.php'], array_map(
+        fn($name) => "Http/Controllers/Auth/{$name}Controller.php",
+        ['Auth', 'ChangePassword', 'ConfirmPassword', 'ForgotPassword', 'Login', 'Profile', 'Register', 'ResetPassword']
+    ));
     $core = MODX_CORE_PATH . 'components/pbauth/';
     $target = MODX_CORE_PATH . 'App/';
     $manifestFile = $target . '.pbauth-installed.json';
