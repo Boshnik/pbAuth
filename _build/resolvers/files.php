@@ -2,77 +2,155 @@
 /** @var xPDOTransport $transport */
 /** @var array $options */
 /** @var modX $modx */
+
+/**
+ * Раскладка файлов компонента в site-owned слой core/App/.
+ *
+ * Ни install, ни upgrade никогда не перезаписывают уже существующий файл:
+ * попав в App/, файл принадлежит сайту. Чтобы деинсталляция не унесла с собой
+ * чужое, компонент ведёт манифест — список путей, которые он реально положил,
+ * с хешами на момент установки. Удаляются только те файлы, что с тех пор не
+ * менялись; всё правленое остаётся сайту.
+ */
+
 if ($transport->xpdo) {
     $modx =& $transport->xpdo;
-    $cache = $modx->getCacheManager();
 
-    if (!$cache) {
-        $modx->log(modX::LOG_LEVEL_ERROR, 'Could not load CacheManager.');
-        return false;
-    }
-
+    $appFolders = ['Http', 'routes', 'elements', 'lang'];
     $core = MODX_CORE_PATH . 'components/pbauth/';
     $target = MODX_CORE_PATH . 'App/';
-    $folders = array_filter(glob($core . '*'), 'is_dir');
+    $manifestFile = $target . '.pbauth-installed.json';
+
+    $manifest = pbauthReadManifest($manifestFile);
 
     switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         case xPDOTransport::ACTION_INSTALL:
-            foreach ($folders as $folder) {
-                $folderName = basename($folder);
-                if ($folderName === 'docs') {
-                    continue;
-                }
-
-                $targetPath = $target . $folderName . '/';
-                $cache->copyTree($folder, $targetPath);
-            }
-            break;
         case xPDOTransport::ACTION_UPGRADE:
-            foreach ($folders as $folder) {
-                $folderName = basename($folder);
-                if ($folderName === 'docs') {
+            $copied = 0;
+            $kept = 0;
+            foreach ($appFolders as $folder) {
+                $source = $core . $folder;
+                if (!is_dir($source)) {
                     continue;
                 }
-
-                $targetPath = $target . $folderName . '/';
-                copyMissingFiles($folder, $targetPath);
+                pbauthCopyMissing($source, $target . $folder, $folder, $manifest, $copied, $kept);
             }
+            pbauthWriteManifest($manifestFile, $manifest);
+            $modx->log(modX::LOG_LEVEL_INFO, "[pbAuth] Скопировано файлов: {$copied}, оставлено файлов сайта: {$kept}.");
             break;
+
         case xPDOTransport::ACTION_UNINSTALL:
-            cleanFiles($cache, $target);
+            $removed = 0;
+            $kept = 0;
+            foreach ($manifest as $relative => $hash) {
+                $path = $target . $relative;
+                if (!is_file($path)) {
+                    continue;
+                }
+                if (sha1_file($path) !== $hash) {
+                    $kept++;
+                    continue;
+                }
+                if (unlink($path)) {
+                    $removed++;
+                }
+            }
+            foreach ($appFolders as $folder) {
+                pbauthRemoveEmptyDirs($target . $folder);
+            }
+            if (is_file($manifestFile)) {
+                unlink($manifestFile);
+            }
+            $modx->log(modX::LOG_LEVEL_INFO, "[pbAuth] Удалено файлов: {$removed}, оставлено изменённых сайтом: {$kept}.");
             break;
     }
 }
 
-function copyMissingFiles(string $sourceDir, string $targetDir): void
+function pbauthReadManifest(string $file): array
 {
-    if (!is_dir($sourceDir)) {
-        throw new RuntimeException("Source directory does not exist: $sourceDir");
+    if (!is_file($file)) {
+        return [];
     }
 
+    $data = json_decode((string)file_get_contents($file), true);
+
+    return is_array($data) ? array_filter($data, 'is_string') : [];
+}
+
+function pbauthWriteManifest(string $file, array $manifest): void
+{
+    $dir = dirname($file);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+
+    ksort($manifest);
+    file_put_contents($file, json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+/**
+ * Копирует только отсутствующие файлы и ведёт учёт того, что принадлежит компоненту.
+ *
+ * Файл, совпадающий с поставочным байт в байт, компонент считает своим даже без
+ * записи в манифесте — так подхватываются установки, сделанные до его появления.
+ * Файл, изменившийся после установки, из манифеста вычёркивается: он теперь сайта.
+ */
+function pbauthCopyMissing(
+    string $sourceDir,
+    string $targetDir,
+    string $prefix,
+    array &$manifest,
+    int &$copied,
+    int &$kept
+): void {
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($sourceDir, RecursiveDirectoryIterator::SKIP_DOTS),
         RecursiveIteratorIterator::SELF_FIRST
     );
 
     foreach ($iterator as $file) {
-        if ($file->isFile()) {
-            $relativePath = substr($file->getPathname(), strlen($sourceDir));
-            $targetPath = $targetDir . $relativePath;
+        if (!$file->isFile()) {
+            continue;
+        }
 
-            if (!file_exists($targetPath)) {
-                $targetFolder = dirname($targetPath);
-                if (!is_dir($targetFolder)) {
-                    mkdir($targetFolder, 0755, true);
-                }
+        $relative = $prefix . '/' . str_replace(
+            DIRECTORY_SEPARATOR,
+            '/',
+            ltrim(substr($file->getPathname(), strlen($sourceDir)), DIRECTORY_SEPARATOR)
+        );
+        $targetPath = $targetDir . substr($relative, strlen($prefix));
 
-                copy($file->getPathname(), $targetPath);
+        if (!file_exists($targetPath)) {
+            $targetFolder = dirname($targetPath);
+            if (!is_dir($targetFolder)) {
+                mkdir($targetFolder, 0755, true);
             }
+            if (copy($file->getPathname(), $targetPath)) {
+                $manifest[$relative] = sha1_file($targetPath);
+                $copied++;
+            }
+            continue;
+        }
+
+        $targetHash = sha1_file($targetPath);
+
+        if (isset($manifest[$relative])) {
+            if ($manifest[$relative] !== $targetHash) {
+                unset($manifest[$relative]);
+                $kept++;
+            }
+            continue;
+        }
+
+        if ($targetHash === sha1_file($file->getPathname())) {
+            $manifest[$relative] = $targetHash;
+        } else {
+            $kept++;
         }
     }
 }
 
-function cleanFiles($cache, string $directory): void
+function pbauthRemoveEmptyDirs(string $directory): void
 {
     if (!is_dir($directory)) {
         return;
@@ -84,20 +162,13 @@ function cleanFiles($cache, string $directory): void
     );
 
     foreach ($iterator as $item) {
-        $path = $item->getPathname();
-
-        if ($item->isFile()) {
-            if ($item->getFilename() === 'auth.php') {
-                unlink($path);
-            }
+        if ($item->isDir() && !(new FilesystemIterator($item->getPathname()))->valid()) {
+            rmdir($item->getPathname());
         }
+    }
 
-        if ($item->isDir()) {
-            $folderName = $item->getFilename();
-            if ($folderName === 'auth' || $folderName === 'Auth') {
-                $cache->deleteTree($path, ['deleteTop' => true, 'extensions' => []]);
-            }
-        }
+    if (!(new FilesystemIterator($directory))->valid()) {
+        rmdir($directory);
     }
 }
 
