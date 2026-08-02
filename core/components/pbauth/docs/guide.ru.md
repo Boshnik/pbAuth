@@ -1,165 +1,243 @@
-# pbAuth — как это устроено и как это менять
+# pbAuth — руководство
 
-Авторизация, регистрация и профиль для сайтов на PageBlocks 3.
+Вход, регистрация, восстановление пароля и профиль пользователя для сайтов на
+PageBlocks 3.
 
-Главная мысль: **код компонента не копируется на сайт и не правится**. Всё, что
-сайту нужно изменить, задаётся снаружи — конфигом, событием или наследником
-контроллера. Поэтому исправленный в компоненте баг доезжает до сайта обычным
-обновлением, а правки сайта обновление не затирает.
+Руководство идёт по шагам: от установки до «а как сделать вот это». Читать
+подряд не обязательно — найдите свой шаг в оглавлении.
+
+1. [Установка](#шаг-1-установка)
+2. [Кнопки «Войти» и «Регистрация» в шапке](#шаг-2-кнопки-войти-и-регистрация-в-шапке)
+3. [Страницы входа и регистрации](#шаг-3-страницы-входа-и-регистрации)
+4. [Добавить своё поле в форму](#шаг-4-добавить-своё-поле-в-форму)
+5. [Тексты и переводы](#шаг-5-тексты-и-переводы)
+6. [Сделать что-то до или после регистрации](#шаг-6-сделать-что-то-до-или-после-регистрации)
+7. [Куда попадает пользователь после входа](#шаг-7-куда-попадает-пользователь-после-входа)
+8. [Свои страницы в разделе профиля](#шаг-8-свои-страницы-в-разделе-профиля)
+9. [Если нужно поменять саму логику](#шаг-9-если-нужно-поменять-саму-логику)
+10. [Справочник](#справочник)
+11. [Если что-то не работает](#если-что-то-не-работает)
 
 ---
 
-## 1. Что где лежит
+## Шаг 1. Установка
 
-| Путь | Кому принадлежит | Обновляется? |
+**Сначала PageBlocks, потом pbAuth.** pbAuth работает поверх PageBlocks 3 и без
+него не запустится.
+
+1. В менеджере MODX: **Приложения → Установщик → Загрузить дополнения**, найти
+   и установить **pbAuth**.
+2. **Система → Настройки системы**, фильтр по `pageblocks`. Настройка
+   `pageblocks_routing` должна быть в значении **Route Only** или **Full API** —
+   иначе адреса `/login` и `/register` просто не заработают.
+3. Там же включите `pageblocks_load_scripts` — тогда формы будут отправляться без
+   перезагрузки страницы, а ошибки подсвечиваться прямо в полях.
+4. Почистите кэш сайта.
+
+Проверка: откройте `/login`. Должна открыться страница с формой входа.
+
+Что установщик сделал: положил сам компонент в `core/components/pbauth/`, а
+шаблоны и тексты — в `core/App/elements/auth/` и `core/App/lang/*/auth.php`.
+**Вторые — ваши**, правьте их сколько угодно, обновление компонента их не
+тронет. В первые лезть не нужно, они перезаписываются при каждом обновлении.
+
+---
+
+## Шаг 2. Кнопки «Войти» и «Регистрация» в шапке
+
+Готовый кусок вёрстки (в MODX такие куски называются *чанками*) уже есть — его
+надо только позвать из шаблона сайта. Вариантов два.
+
+**Обычные ссылки** — ведут на отдельные страницы `/login` и `/register`:
+
+```
+{include 'file:auth/chunks/auth.tpl'}
+```
+
+**Модальные окна** — формы открываются поверх страницы, никуда не уходя:
+
+```
+{include 'file:auth/chunks/auth_modal.tpl'}
+```
+
+Вставьте одну из этих строк в шапку своего шаблона — туда, где должны появиться
+кнопки.
+
+> `file:` означает «файл из папки `core/App/elements/`». То есть
+> `file:auth/chunks/auth.tpl` — это `core/App/elements/auth/chunks/auth.tpl`.
+
+Оба чанка сами понимают, вошёл пользователь или нет: гостю показывают кнопки, а
+вошедшему — аватар с именем и ссылкой в профиль.
+
+### Поменять их вид
+
+Откройте `core/App/elements/auth/chunks/auth.tpl` и правьте как обычную вёрстку.
+Файл ваш, ничего не сломается.
+
+Внутри всего две смысловые конструкции:
+
+```
+{auth}   ...тут то, что видит вошедший пользователь...   {/auth}
+{guest}  ...тут то, что видит гость...                   {/guest}
+```
+
+Ссылки лучше не писать руками, а брать по имени — тогда они не сломаются, если
+адрес страницы поменяется:
+
+```
+<a href="{route 'pageLogin'}">Войти</a>
+<a href="{route 'pageRegister'}">Регистрация</a>
+<a href="{route 'pageProfile'}">Мой профиль</a>
+<a href="{route 'logout'}">Выйти</a>
+```
+
+Полный список имён — в [справочнике](#роуты-и-их-имена).
+
+---
+
+## Шаг 3. Страницы входа и регистрации
+
+Страница собирается из двух файлов:
+
+| | Файл | Что это |
 |---|---|---|
-| `core/components/pbauth/src/` | компоненту | да, целиком |
-| `core/components/pbauth/routes/auth.php` | компоненту | да |
-| `core/components/pbauth/config/defaults.php` | компоненту | да |
-| `core/components/pbauth/lexicon/` | компоненту (строки в менеджере) | да |
-| `core/App/config/pbauth.php` | **сайту** | никогда |
-| `core/App/elements/auth/` — шаблоны и чанки | **сайту** | только чего нет |
-| `core/App/lang/{локаль}/auth.php` | **сайту** | только чего нет |
+| **обёртка** | `core/App/elements/auth/templates/auth.tpl` | `<html>`, `<head>`, подключение стилей, общая рамка |
+| **форма** | `core/App/elements/auth/chunks/form.login.tpl` | сама форма, которая вставляется внутрь обёртки |
 
-Правило простое: всё внутри `core/components/pbauth/` — **не трогать**, при
-обновлении перезапишется. Всё внутри `core/App/` — ваше, компонент туда только
-докладывает недостающее и никогда ничего не перезаписывает.
+Обе — в `core/App/`, то есть ваши. Правьте прямо на месте.
 
-### Почему шаблоны копируются, а контроллеры нет
-
-Дизайн у каждого сайта свой — тут никакая настройка не помогает, проще отдать
-файл и забыть про него. А логика у всех одна и та же с точностью до полей и
-редиректов — её выгоднее держать в одном месте и настраивать.
-
----
-
-## 2. Путь запроса
+Формы лежат рядом, по одной на каждое действие:
 
 ```
-GET /login
-  │
-  ├─ bootstrap.php компонента: Route::addRoutesPath(core/components/pbauth/routes)
-  │
-  ├─ routes/auth.php:  Route::get('/login', Controllers::action('login', 'show'))
-  │                                          │
-  │                                          └─ читает controllers.login из конфига
-  │
-  ├─ LoginController::show()
-  │     └─ $this->page('auth', 'login', ['title' => lang('auth.login_title')])
-  │            ├─ views.auth      → 'file:auth/templates/auth'  → core/App/elements/auth/templates/auth.tpl
-  │            └─ forms.login     → 'form.login'                → в шаблон приходит $form
-  │
-  └─ шаблон подключает core/App/elements/auth/chunks/form.login.tpl
+core/App/elements/auth/chunks/
+    form.login.tpl              вход
+    form.register.tpl           регистрация
+    form.forgotPassword.tpl     «забыли пароль»
+    form.resetPassword.tpl      ввод нового пароля по ссылке из письма
+    form.changePassword.tpl     смена пароля в профиле
+    form.confirmPassword.tpl    подтверждение пароля
+    form.profile.tpl            редактирование профиля
+    modals/                     те же формы, но для модальных окон
+    email.verifyEmail.tpl       письмо со ссылкой подтверждения
+    email.resetPassword.tpl     письмо для сброса пароля
 ```
 
-`file:` — это префикс провайдера шаблонов PageBlocks, он ведёт в
-`core/App/elements/`. То есть `file:auth/templates/auth` — это
-`core/App/elements/auth/templates/auth.tpl` (расширение `.tpl` дописывается само,
-если его нет).
+Обёрток тоже две: `auth.tpl` (вход, регистрация, восстановление) и `profile.tpl`
+(профиль и смена пароля — там сбоку меню разделов).
 
----
+### Использовать свой шаблон вместо поставочного
 
-## 3. Конфиг сайта
+Если у вас уже есть свой шаблон страницы и поставочный не нужен — не правьте
+чужой файл, а укажите свой. Для этого нужен файл настроек:
 
-Создайте `core/App/config/pbauth.php`. Образец — `docs/pbauth.config.example.php`.
-Писать нужно **только отличия** от `core/components/pbauth/config/defaults.php`,
-остальное подставится само.
+**`core/App/config/pbauth.php`**
 
 ```php
 <?php
 
-use Boshnik\PbAuth\Events\Dispatcher;
-use PageBlocks\App\Events\Auth\StoreExtendedFields;
-
 return [
-    'views'     => ['profile' => 'file:templates/profile'],
-    'forms'     => ['profile' => null],
-    'rules'     => ['profile' => ['phone' => 'required|string']],
-    'listeners' => [Dispatcher::USER_SAVING => [StoreExtendedFields::class]],
+    'views' => [
+        'auth'    => 'file:templates/my-auth',      // core/App/elements/templates/my-auth.tpl
+        'profile' => 'file:templates/my-profile',
+    ],
 ];
 ```
 
-### Как склеиваются значения
+Этот файл — ваш пульт управления компонентом, дальше он будет встречаться
+постоянно. Его не существует сразу после установки, создайте сами. Образец со
+всеми возможными настройками — `core/components/pbauth/docs/pbauth.config.example.php`.
 
-Словари сливаются **по ключам вглубь**, списки заменяются целиком.
+В шаблон приходят две переменные:
 
-```php
-// в defaults.php
-'rules' => ['register' => ['username' => '...', 'email' => '...', 'password' => '...']]
+- `$title` — заголовок страницы;
+- `$form` — имя чанка с формой, например `form.login`.
 
-// у вас
-'rules' => ['register' => ['phone' => 'nullable|string', 'email' => 'required|email']]
+Подключается форма так:
 
-// в итоге: username (из defaults), email (ваш), password (из defaults), phone (ваш)
+```
+{set $chunkPath = 'file:auth/chunks/' ~ $form}
+{include $chunkPath}
 ```
 
-Чтобы **убрать** поставочное поле, задайте ему `null`:
+### Подменить одну форму
+
+Хотите свою форму регистрации, а остальные оставить как есть — положите свой чанк
+и назовите его в настройках:
 
 ```php
-'rules' => ['profile' => ['fullname' => null]],
-```
-
-А вот `user_groups` — список, он заменяется целиком:
-
-```php
-'user_groups' => ['Users', 'Customers'],   // ровно эти две группы, не плюс к чему-то
-```
-
-### Все ключи
-
-| Ключ | Что делает |
-|---|---|
-| `views.auth`, `views.profile` | шаблоны-обёртки страниц |
-| `forms.*` | чанк формы, который подставится в шаблон. `null` — не передавать `$form` вовсе |
-| `rules.*` | поля и правила валидации по действиям |
-| `redirects.login` / `logout` / `reset_password` / `verify_email` | куда уводить после успеха |
-| `login_redirect_param` | имя GET-параметра для возврата после входа (по умолчанию `redirect`). `''` — выключить |
-| `user_groups` | группы, куда попадает новый пользователь |
-| `avatar_path` | куда складывать аватары, `:user_id` подставляется |
-| `register_ip_limit` | сколько регистраций с одного IP в час, `0` — без ограничения |
-| `controllers.*` | подмена класса контроллера |
-| `listeners.*` | слушатели событий |
-
-Действия (`*` выше) одни и те же везде: `login`, `register`, `profile`,
-`forgot_password`, `reset_password`, `change_password`, `confirm_password`, плюс
-`auth` в `controllers` — это базовый контроллер, он обслуживает подтверждение
-почты.
-
----
-
-## 4. Как решать типовые задачи
-
-### Добавить поле в форму регистрации
-
-Три шага, контроллер не трогаем.
-
-**1. Правило в конфиг:**
-
-```php
-'rules' => [
-    'register' => [
-        'phone' => 'required|string|unique:user_attributes',
-    ],
+'forms' => [
+    'register' => 'my.register',   // core/App/elements/auth/chunks/my.register.tpl
 ],
 ```
 
-**2. Поле в чанк** `core/App/elements/auth/chunks/form.register.tpl` — рядом с
-остальными, по образцу соседей.
+А если ваш шаблон рисует форму сам и переменная `$form` ему не нужна:
 
-**3. Всё.** Если у поля есть колонка в `modx_users` или `modx_user_attributes`
-(как у `phone`), оно сохранится само: контроллер отдаёт весь провалидированный
-массив в `fromArray()`.
+```php
+'forms' => [
+    'profile' => null,
+],
+```
 
-Если колонки нет — нужен слушатель, см. следующий пункт.
+---
 
-> Валидатор `unique:` и `exists:` работают **с именем таблицы**, а не с классом
-> MODX: `unique:users`, `exists:user_attributes,email`. Имя без префикса —
-> префикс добавится сам.
+## Шаг 4. Добавить своё поле в форму
 
-### Сохранить поле, у которого нет колонки
+Самая частая задача. Разберём на примере телефона в регистрации.
 
-Такие поля кладут в `extended` профиля. Пишем слушателя `USER_SAVING` — он
-срабатывает **до** `save()`, поэтому отдельно сохранять ничего не надо.
+### 4.1. Если у поля есть колонка в базе
+
+`phone` — колонка таблицы `modx_user_attributes`, MODX её знает. Тогда достаточно
+двух правок, PHP-код писать не нужно.
+
+**Правка первая — разрешить поле.** Поле, которого нет в списке проверок, просто
+выбрасывается: так злоумышленник не подсунет лишних данных. Поэтому телефон надо
+объявить.
+
+`core/App/config/pbauth.php`:
+
+```php
+<?php
+
+return [
+    'rules' => [
+        'register' => [
+            'phone' => 'required|string|unique:user_attributes',
+        ],
+    ],
+];
+```
+
+Читается так: телефон обязателен, это строка, и такого телефона ещё не должно
+быть в таблице `user_attributes`.
+
+**Правка вторая — добавить поле в форму.** Откройте
+`core/App/elements/auth/chunks/form.register.tpl` и вставьте блок по образцу
+соседних:
+
+```html
+<div class="form-group mb-3">
+    <label class="mb-2" for="phone">Телефон</label>
+    <input type="text" name="phone" id="phone"
+           class="form-control{if $errors.phone} is-invalid{/if}"
+           value="{$old_input.phone}" required>
+    <span class="invalid-feedback" data-error="phone">{$errors.phone}</span>
+</div>
+```
+
+Три вещи в этом блоке обязательны, если хотите нормальное поведение формы:
+
+- `name="phone"` — под этим именем поле придёт на сервер;
+- `{$errors.phone}` и `data-error="phone"` — сюда попадёт текст ошибки;
+- `{$old_input.phone}` — чтобы при ошибке введённое не стёрлось.
+
+Всё. Телефон сохранится сам.
+
+### 4.2. Если колонки в базе нет
+
+Например, `telegram`. Такие поля MODX хранит в служебном поле `extended` — туда
+их надо положить руками. Первые две правки те же, добавляется третья.
+
+**Правка третья — маленький класс, который разложит поля.**
 
 `core/App/Events/Auth/StoreExtendedFields.php`:
 
@@ -193,63 +271,272 @@ class StoreExtendedFields
 }
 ```
 
-Регистрируем в конфиге:
+И сказать компоненту, когда его звать — перед сохранением пользователя:
 
 ```php
-'listeners' => [
-    Dispatcher::USER_SAVING => [StoreExtendedFields::class],
-],
-```
+<?php
 
-### Изменить вёрстку
+use Boshnik\PbAuth\Events\Dispatcher;
+use PageBlocks\App\Events\Auth\StoreExtendedFields;
 
-Правьте файлы прямо в `core/App/elements/auth/` — они ваши, обновление их не
-тронет. Хотите свой шаблон в другом месте — укажите путь в конфиге:
-
-```php
-'views' => ['profile' => 'file:templates/profile'],   // core/App/elements/templates/profile.tpl
-```
-
-Если шаблон рисует форму сам и переменная `$form` ему не нужна:
-
-```php
-'forms' => ['profile' => null],
-```
-
-### Изменить тексты
-
-Строки фронта — `core/App/lang/{ru,en,uk,de}/auth.php`, в шаблонах
-`{lang 'auth.login_title'}`, в PHP `lang('auth.login_title')`. Файлы ваши,
-правьте на месте. Новый ключ добавляйте **во все четыре локали**.
-
-Не путать с `core/components/pbauth/lexicon/` — это подписи системных настроек в
-менеджере MODX, они принадлежат компоненту.
-
-### Повесить свою логику на событие
-
-```php
-'listeners' => [
-    Dispatcher::AFTER_REGISTER => [
-        \PageBlocks\App\Events\Auth\SendWelcomeLetter::class,
-        \PageBlocks\App\Events\Auth\NotifyManager::class,
+return [
+    'rules' => [
+        'register' => ['telegram' => 'nullable|string'],
+        'profile'  => ['telegram' => 'nullable|string'],
     ],
+    'listeners' => [
+        Dispatcher::USER_SAVING => [StoreExtendedFields::class],
+    ],
+];
+```
+
+Сохранять профиль внутри класса не нужно — компонент сохранит его сам сразу
+после.
+
+### 4.3. Убрать поставочное поле
+
+Задайте ему `null`:
+
+```php
+'rules' => [
+    'profile' => ['fullname' => null],
 ],
 ```
 
-Слушатель — класс с методом `handle(array $params, string $event)` либо любой
-callable (замыкание, `[$obj, 'method']`). Исключение в слушателе логируется и
-**не роняет** действие: пользователь уже создан, ронять запрос из-за неотправленного
-письма нельзя. Слушатели одного события выполняются по порядку.
+И уберите его из чанка формы.
 
-Дополнительно вызывается одноимённое системное событие MODX — это для сторонних
-плагинов. Плагину уходят только скаляры (`user_id` вместо объекта). Свою логику
-лучше вешать конфигом: плагин после каждого деплоя приходится заново прикреплять
-в **System Events**, а конфиг работает сразу.
+### Частые правила проверки
 
-### Переопределить контроллер целиком
+| Правило | Что значит |
+|---|---|
+| `required` | обязательное |
+| `nullable` | можно оставить пустым |
+| `string`, `integer` | тип значения |
+| `email` | похоже на адрес почты |
+| `min:8`, `max:30` | длина |
+| `confirmed` | рядом должно быть поле `имя_confirmation` с тем же значением |
+| `unique:users` | такого значения ещё нет в таблице `modx_users` |
+| `exists:user_attributes,email` | такое значение в таблице есть |
+| `file`, `image`, `mimes:image/png` | загружаемый файл |
 
-Когда события и конфига мало — наследуйтесь. Свой класс кладётся в App, роуты
-компонента начнут вести в него сами.
+Правила пишутся через `|`: `'required|string|min:3|max:30'`.
+
+> ⚠️ В `unique:` и `exists:` указывается **имя таблицы** без префикса
+> (`users`, `user_attributes`), а не класс MODX. Если написать `unique:modUser`,
+> проверка молча не найдёт ничего и пропустит дубликат.
+
+---
+
+## Шаг 5. Тексты и переводы
+
+Все надписи лежат в `core/App/lang/ru/auth.php` — обычный PHP-массив:
+
+```php
+<?php
+
+return [
+    'login_title' => 'Вход',
+    'register_title' => 'Регистрация',
+    'register_success' => 'Проверьте почту — мы отправили ссылку для подтверждения',
+    // ...
+];
+```
+
+В шаблоне надпись зовут так: `{lang 'auth.login_title'}`, в PHP —
+`lang('auth.login_title')`.
+
+Файлы ваши, правьте прямо в них. Языков четыре: `ru`, `en`, `uk`, `de` — новый
+ключ добавляйте во все, иначе на другом языке вместо текста покажется сам ключ.
+
+> Не путайте с `core/components/pbauth/lexicon/` — это подписи настроек в
+> админке MODX. Они принадлежат компоненту и перезаписываются при обновлении.
+
+---
+
+## Шаг 6. Сделать что-то до или после регистрации
+
+Да, «после» — можно. Именно для этого и есть события: компонент в нужный момент
+зовёт ваш класс, а вы делаете в нём что угодно.
+
+Момента два, и разница между ними важная:
+
+- **до сохранения** (`USER_SAVING`) — пользователь ещё не записан в базу. Здесь
+  меняют сам объект: дописывают поля, подставляют значения. Сохранять не нужно —
+  компонент сохранит следом.
+- **после** (`AFTER_REGISTER`, `AFTER_LOGIN` и остальные) — всё уже записано.
+  Здесь отправляют письма, пишут в лог, дёргают внешний сервис.
+
+### Пример: своё письмо после регистрации
+
+**Первое — класс.** Кладём в `core/App/Events/Auth/`, имя любое.
+
+`core/App/Events/Auth/SendWelcomeLetter.php`:
+
+```php
+<?php
+
+namespace PageBlocks\App\Events\Auth;
+
+use Boshnik\PageBlocks\Support\Mail;
+
+class SendWelcomeLetter
+{
+    public function handle(array $params, string $event): void
+    {
+        $user = $params['user'] ?? null;
+        $validated = $params['validated'] ?? [];
+
+        if (!$user) {
+            return;
+        }
+
+        Mail::to($validated['email'])
+            ->subject('Добро пожаловать!')
+            ->view('file:auth/chunks/email.welcome', [
+                'username' => $user->username,
+            ])
+            ->send();
+    }
+}
+```
+
+Метод обязательно называется `handle` и принимает два аргумента: массив данных и
+имя события.
+
+**Второе — сам шаблон письма**, `core/App/elements/auth/chunks/email.welcome.tpl`:
+
+```html
+<p>Здравствуйте, {$username}!</p>
+<p>Спасибо за регистрацию.</p>
+```
+
+**Третье — сказать, когда его звать.** В `core/App/config/pbauth.php`:
+
+```php
+<?php
+
+use Boshnik\PbAuth\Events\Dispatcher;
+use PageBlocks\App\Events\Auth\SendWelcomeLetter;
+
+return [
+    'listeners' => [
+        Dispatcher::AFTER_REGISTER => [SendWelcomeLetter::class],
+    ],
+];
+```
+
+Готово. Классов на одно событие можно повесить сколько угодно — выполнятся по
+очереди:
+
+```php
+Dispatcher::AFTER_REGISTER => [
+    SendWelcomeLetter::class,
+    NotifyManager::class,
+],
+```
+
+Если ваш класс упадёт с ошибкой, регистрацию это не сломает: ошибка запишется в
+лог MODX, а пользователь всё равно создастся. Так и задумано — терять
+регистрацию из-за неотправленного письма нельзя.
+
+### Все события
+
+| Когда | Константа | Что приходит в `$params` |
+|---|---|---|
+| перед сохранением — и при регистрации, и при правке профиля | `Dispatcher::USER_SAVING` | `user`, `profile`, `validated`, `action` (`register` или `profile`) |
+| пользователь зарегистрирован | `Dispatcher::AFTER_REGISTER` | `user`, `profile`, `validated` |
+| пользователь вошёл | `Dispatcher::AFTER_LOGIN` | `user` |
+| пользователь вышел | `Dispatcher::AFTER_LOGOUT` | `user` |
+| профиль сохранён | `Dispatcher::AFTER_PROFILE_UPDATE` | `user`, `profile`, `validated` |
+| почта подтверждена по ссылке из письма | `Dispatcher::AFTER_VERIFY_EMAIL` | `user` |
+| пароль восстановлен по ссылке | `Dispatcher::AFTER_RESET_PASSWORD` | `user` |
+| пароль изменён в профиле | `Dispatcher::AFTER_CHANGE_PASSWORD` | `user` |
+
+`validated` — это массив с тем, что пришло из формы и прошло проверку.
+
+> Одновременно вызывается и одноимённое системное событие MODX
+> (`pbAuthAfterRegister` и т. д.) — на случай, если вам привычнее плагины. Но
+> плагин после каждого обновления приходится заново прикреплять в **Система →
+> События**, а класс в настройках работает сразу. Плагину, в отличие от класса,
+> приходит только `user_id`, а не сам объект.
+
+---
+
+## Шаг 7. Куда попадает пользователь после входа
+
+По умолчанию — на главную. Меняется одной строкой:
+
+```php
+'redirects' => [
+    'login'          => '/profile',   // после входа
+    'logout'         => '/',          // после выхода
+    'reset_password' => '/profile',   // после восстановления пароля
+    'verify_email'   => '/profile',   // после подтверждения почты
+],
+```
+
+### Вернуть туда, откуда пришёл
+
+Если пользователя завернуло на вход с закрытой страницы, его можно вернуть
+обратно. Добавьте в форму входа скрытое поле:
+
+```html
+<input type="hidden" name="redirect" value="{$.get.redirect|escape}">
+```
+
+и ссылку на вход стройте с параметром: `/login?redirect=/profile/ads`.
+
+Принимаются только адреса внутри сайта — чужой домен компонент отбросит и уведёт
+на обычный адрес. Это защита: иначе ссылку на вашу форму входа можно было бы
+использовать для переброса людей на чужой сайт.
+
+---
+
+## Шаг 8. Свои страницы в разделе профиля
+
+Адреса страниц (в PageBlocks они называются *роутами*) компонент держит у себя, в
+`core/components/pbauth/routes/auth.php`. **Этот файл править не надо** — он
+перезапишется при обновлении.
+
+Свои страницы добавляйте своим файлом в `core/App/routes/`. Например,
+`core/App/routes/profile-extra.php`:
+
+```php
+<?php
+
+use Boshnik\PageBlocks\Facades\Route;
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile/settings', 'ProfileSettingsController@show')->name('profileSettings');
+});
+```
+
+`middleware('auth')` означает «только для вошедших»; для страниц, доступных
+только гостям, — `middleware('guest')`.
+
+Контроллер к такой странице кладётся в
+`core/App/Http/Controllers/ProfileSettingsController.php` — это уже обычная
+разработка на PageBlocks, pbAuth тут ни при чём.
+
+> ⚠️ **Только не называйте свой файл `auth.php`.** Пока в `core/App/routes/`
+> лежит файл с именно этим именем, pbAuth считает, что сайт живёт на старой
+> схеме, и **свои адреса не подключает вообще** — `/login` перестанет
+> открываться. Любое другое имя годится.
+
+Порядок объявления значения не имеет: точный адрес всегда выигрывает у
+шаблонного. `/profile/settings` откроет вашу страницу, даже если где-то объявлен
+`/profile/{alias}`.
+
+---
+
+## Шаг 9. Если нужно поменять саму логику
+
+Это последний рычаг — когда настроек и событий не хватило. Например, надо
+запретить регистрацию с некоторых адресов.
+
+**Не правьте файлы в `core/components/pbauth/`** — они перезапишутся при
+обновлении, и правка молча исчезнет. Вместо этого напишите свой класс, который
+*продолжает* компонентный.
 
 `core/App/Http/Controllers/Auth/RegisterController.php`:
 
@@ -268,10 +555,17 @@ class RegisterController extends \Boshnik\PbAuth\Http\Controllers\Auth\RegisterC
             return response()->error('Регистрация с этого адреса закрыта');
         }
 
-        return parent::register($request);
+        return parent::register($request);   // дальше как обычно
+    }
+
+    protected function isBlacklisted(string $ip): bool
+    {
+        return in_array($ip, ['203.0.113.7'], true);
     }
 }
 ```
+
+И назовите его в настройках:
 
 ```php
 'controllers' => [
@@ -279,160 +573,179 @@ class RegisterController extends \Boshnik\PbAuth\Http\Controllers\Auth\RegisterC
 ],
 ```
 
-Переопределять целиком стоит только то, что действительно нужно, — всё
-остальное продолжит приходить из компонента вместе с обновлениями. Полезные
-защищённые методы базового `AuthController`: `page()` (собрать страницу по
-конфигу), `redirectTo()` (взять редирект из конфига), `authenticate($user)`
-(залогинить во всех контекстах), `getProcessorError()`.
+Адреса компонента после этого будут вести в ваш класс. Всё, что вы не
+переопределили, продолжит работать из компонента и продолжит обновляться —
+поэтому переопределяйте только то, что действительно нужно.
 
-### Добавить свою страницу в раздел профиля
+Ключи в `controllers`: `login`, `register`, `profile`, `forgot_password`,
+`reset_password`, `change_password`, `confirm_password`, `auth` (последний —
+подтверждение почты).
 
-⚠️ **Только не файлом `core/App/routes/auth.php`.** Пока этот файл существует,
-pbAuth считает, что сайт остался на старой схеме, и **не регистрирует свои роуты
-вообще** — иначе те же адреса зарегистрировались бы дважды. Назовите файл иначе:
+---
 
-`core/App/routes/profile-extra.php`:
+## Справочник
+
+### Файл настроек целиком
+
+`core/App/config/pbauth.php`. Писать нужно **только то, что отличается** от
+поставочного — остальное подставится само.
 
 ```php
 <?php
 
-use Boshnik\PageBlocks\Facades\Route;
+use Boshnik\PbAuth\Events\Dispatcher;
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile/settings', 'ProfileSettingsController@show')->name('profileSettings');
-});
+return [
+    // Шаблоны-обёртки страниц
+    'views' => [
+        'auth'    => 'file:auth/templates/auth',
+        'profile' => 'file:auth/templates/profile',
+    ],
+
+    // Чанк формы для страницы. null — не передавать $form в шаблон
+    'forms' => [
+        'login'            => 'form.login',
+        'register'         => 'form.register',
+        'forgot_password'  => 'form.forgotPassword',
+        'reset_password'   => 'form.resetPassword',
+        'change_password'  => 'form.changePassword',
+        'confirm_password' => 'form.confirmPassword',
+        'profile'          => 'form.profile',
+    ],
+
+    // Поля форм и правила проверки
+    'rules' => [
+        'register' => ['phone' => 'required|string'],
+        'profile'  => ['fullname' => null],
+    ],
+
+    // Куда уводить после успеха
+    'redirects' => [
+        'login'          => '/',
+        'logout'         => '/',
+        'reset_password' => '/',
+        'verify_email'   => '/',
+    ],
+
+    // Имя GET-параметра для возврата после входа. '' — выключить
+    'login_redirect_param' => 'redirect',
+
+    // Группы, в которые попадает новый пользователь
+    'user_groups' => ['Users'],
+
+    // Куда складывать аватары, :user_id подставится
+    'avatar_path' => 'assets/images/avatars/:user_id',
+
+    // Сколько регистраций с одного IP в час. 0 — без ограничения
+    'register_ip_limit' => 3,
+
+    // Свои контроллеры вместо поставочных
+    'controllers' => [],
+
+    // Свои классы на события
+    'listeners' => [
+        Dispatcher::AFTER_REGISTER => [],
+    ],
+];
 ```
 
-Здесь работает обычная строковая форма `'Контроллер@метод'` — роутер разворачивает
-её в `PageBlocks\App\Http\Controllers\`, то есть в ваш App.
+Как склеиваются значения: **словари дополняются по ключам, списки заменяются
+целиком.** То есть `rules.register` дополнит поставочные поля своими, а
+`user_groups` заменит список групп полностью.
 
-> Роуты компонента адресуют контроллеры парой `[класс, метод]` именно потому, что
-> строковая форма умеет попасть только в App.
+### Роуты и их имена
 
-Порядок объявления роутов значения не имеет: конкретный путь всегда выигрывает у
-шаблонного (`/profile/settings` победит `/profile/{alias}`), кто бы что раньше ни
-объявил.
+Ссылки стройте по имени: `{route 'pageProfile'}` в шаблоне,
+`route('pageProfile')` в PHP.
 
-### Отдать пользователя туда, откуда его завернули
-
-Добавьте в форму входа скрытое поле:
-
-```html
-<input type="hidden" name="redirect" value="{$.get.redirect|escape}">
-```
-
-Принимается только путь внутри сайта — со схемой или `//host` значение
-отбрасывается, чтобы форма входа не стала открытым редиректом. Имя параметра
-меняется через `login_redirect_param`, пустая строка выключает механизм.
-
----
-
-## 5. События
-
-Все константы — в `Boshnik\PbAuth\Events\Dispatcher`.
-
-| Константа | Имя события | Когда | `$params` |
-|---|---|---|---|
-| `USER_SAVING` | `pbAuthUserSaving` | до `save()` при регистрации **и** при правке профиля | `user`, `profile`, `validated`, `action` (`register`\|`profile`) |
-| `AFTER_REGISTER` | `pbAuthAfterRegister` | после создания пользователя, до письма | `user`, `profile`, `validated` |
-| `AFTER_LOGIN` | `pbAuthAfterLogin` | после успешного входа | `user` |
-| `AFTER_LOGOUT` | `pbAuthAfterLogout` | после выхода | `user` |
-| `AFTER_PROFILE_UPDATE` | `pbAuthAfterProfileUpdate` | после сохранения профиля | `user`, `profile`, `validated` |
-| `AFTER_VERIFY_EMAIL` | `pbAuthAfterVerifyEmail` | после подтверждения почты | `user` |
-| `AFTER_RESET_PASSWORD` | `pbAuthAfterResetPassword` | после сброса пароля | `user` |
-| `AFTER_CHANGE_PASSWORD` | `pbAuthAfterChangePassword` | после смены пароля | `user` |
-
-`USER_SAVING` — единственное событие, где изменения объекта имеют смысл:
-`$params['user']` и `$params['profile']` ещё не сохранены. В остальных объекты
-уже записаны, менять их нужно с явным `save()`.
-
-Событие можно повесить и из кода, минуя конфиг:
-
-```php
-Dispatcher::listen(Dispatcher::AFTER_LOGIN, function (array $params) {
-    // ...
-});
-```
-
----
-
-## 6. Роуты и их имена
-
-Ссылайтесь на страницы по имени — `{route 'pageProfile'}` в шаблоне,
-`route('pageProfile')` в PHP. Адрес поменяется — ссылки останутся рабочими.
-
-| Метод | URI | Имя |
+| Адрес | Имя страницы (GET) | Имя отправки формы (POST) |
 |---|---|---|
-| GET / POST | `/login` | `pageLogin` / `login` |
-| GET / POST | `/register` | `pageRegister` / `register` |
-| GET / POST | `/forgot-password` | `pageForgotPassword` / `forgotPassword` |
-| GET / POST | `/reset-password/{token}`, `/reset-password` | `pageResetPassword` / `resetPassword` |
-| GET / POST | `/confirm-password` | `pageConfirmPassword` / `confirmPassword` |
-| GET / POST | `/profile` | `pageProfile` / `updateProfile` |
-| GET / POST | `/profile/password` | `pageChangePassword` / `changePassword` |
-| GET | `/logout` | `logout` |
-| GET | `/verify-email/{token}` | `verifyEmail` |
+| `/login` | `pageLogin` | `login` |
+| `/register` | `pageRegister` | `register` |
+| `/forgot-password` | `pageForgotPassword` | `forgotPassword` |
+| `/reset-password/{token}` | `pageResetPassword` | `resetPassword` (форма шлётся на `/reset-password`) |
+| `/confirm-password` | `pageConfirmPassword` | `confirmPassword` |
+| `/profile` | `pageProfile` | `updateProfile` |
+| `/profile/password` | `pageChangePassword` | `changePassword` |
+| `/logout` | `logout` | — |
+| `/verify-email/{token}` | `verifyEmail` | — |
 
-Гостевые страницы закрыты middleware `guest`, страницы профиля — `auth`.
+### Настройки в админке
 
----
-
-## 7. Системные настройки
-
-Задаются в менеджере MODX, раздел **pbauth**:
+**Система → Настройки системы**, раздел `pbauth`:
 
 | Настройка | Зачем |
 |---|---|
-| `pbauth_recaptcha_service` | какой антиспам-сервис используется |
-| `pbauth_recaptcha_public_key` | Site key, подставляется в шаблон |
+| `pbauth_recaptcha_service` | какой антиспам используется |
+| `pbauth_recaptcha_public_key` | Site key от Google reCAPTCHA v3 |
 | `pbauth_recaptcha_secret_key` | Secret key. **Пока он пуст, reCAPTCHA не проверяется** |
 
+Ключи берутся в [панели Google reCAPTCHA](https://www.google.com/recaptcha/admin).
+
+### Что где лежит
+
+```
+core/components/pbauth/          КОМПОНЕНТ — не трогать, перезапишется
+    src/                         код
+    routes/auth.php              адреса страниц
+    config/defaults.php          поставочные настройки (смотреть можно, править нет)
+    lexicon/                     подписи настроек в админке
+    docs/                        документация и образец настроек
+
+core/App/                        ВАШЕ — правьте свободно
+    config/pbauth.php            ваши настройки компонента
+    elements/auth/templates/     обёртки страниц
+    elements/auth/chunks/        формы и письма
+    lang/{ru,en,uk,de}/auth.php  надписи
+    Events/Auth/                 ваши классы на события
+    Http/Controllers/Auth/       ваши контроллеры (если понадобятся)
+    routes/                      ваши адреса (файл НЕ должен называться auth.php)
+```
+
+### Обновление и удаление
+
+При установке и обновлении компонент кладёт в `core/App/` только те файлы,
+которых там ещё нет. **Существующий файл не перезаписывается никогда** — раз он в
+`App/`, он ваш.
+
+Что именно было положено, записывается в `core/App/.pbauth-installed.json`. При
+удалении компонента стираются только те файлы, которых вы не касались; всё
+правленое остаётся.
+
+Переход с версий до 1.1.0 — см. `changelog.txt`, раздел Upgrading.
+
 ---
 
-## 8. Установка, обновление, удаление
+## Если что-то не работает
 
-**Установка и обновление ведут себя одинаково**: копируют в `core/App/` только
-те файлы, которых там нет. Существующий файл не перезаписывается никогда — раз он
-в App, он ваш.
+**`/login` открывается как «страница не найдена».**
+Проверьте настройку `pageblocks_routing` — должна быть **Route Only** или **Full
+API**. Затем: нет ли в `core/App/routes/` файла с именем `auth.php` — он
+выключает адреса компонента. Потом почистите кэш.
 
-Что именно было положено, компонент записывает в
-`core/App/.pbauth-installed.json` — путь и хеш на момент установки.
+**Поле из формы не сохраняется.**
+Скорее всего оно не объявлено в `rules` — всё, чего там нет, отбрасывается.
+Если объявлено, но всё равно не сохраняется, значит у него нет колонки в базе:
+нужен класс на `USER_SAVING`, см. [шаг 4.2](#42-если-колонки-в-базе-нет).
 
-**Удаление** сносит только те файлы, чей хеш всё ещё совпадает с записанным.
-Файл, который вы правили, остаётся. Файл, изменённый после установки, вычёркивается
-из манифеста навсегда — он перешёл к сайту.
+**Регистрация пропускает одинаковые логины или почты.**
+В правиле написано `unique:modUser` вместо `unique:users`. Проверка ждёт имя
+таблицы, а не класс MODX, и по несуществующей таблице молча ничего не находит.
 
-### Переход со старых версий (до 1.1.0)
+**Ошибки формы не показываются.**
+В чанке у поля должны быть `{$errors.имя}` и `data-error="имя"`. И должна быть
+включена настройка `pageblocks_load_scripts`.
 
-До 1.1.0 компонент копировал в `core/App/` ещё и роуты с контроллерами. При
-обновлении:
+**Правка в шаблоне не видна.**
+Почистите кэш MODX и обновите страницу через `Ctrl+F5`.
 
-- `App/routes/auth.php` удаляется, **если он побайтно совпадает** с поставочным.
-  Правленый остаётся — и тогда pbAuth не подаёт свои роуты, чтобы адреса не
-  задвоились. Сайт продолжает работать на старом коде;
-- контроллеры в `App/Http/Controllers/Auth/` остаются. Когда перенесёте правки в
-  `App/config/pbauth.php` и слушателей, удалите вручную и их, и
-  `App/routes/auth.php` — после этого сайт перейдёт на код компонента.
+**Правка исчезла после обновления компонента.**
+Вы правили файл внутри `core/components/pbauth/`. Всё, что там, перезаписывается.
+Переносите правку в `core/App/` — настройками, событием или своим контроллером.
 
-Проверить, на чём вы сейчас: если `core/App/routes/auth.php` существует — на
-старой схеме. В лог MODX об этом пишется на каждом запросе (уровень INFO).
-
----
-
-## 9. Ловушки
-
-**`core/App/routes/auth.php` выключает роуты компонента.** Именно этот путь,
-именно это имя. Свои роуты — в файл с другим именем.
-
-**Правки в `core/components/pbauth/` пропадут** при обновлении. Если хочется
-поправить компонентный контроллер — значит, не хватает точки расширения: заведите
-её (событие или ключ конфига), а не правьте на месте.
-
-**`unique:` и `exists:` принимают имя таблицы, не класс MODX.** `unique:users`,
-а не `unique:modUser` — второе молча ничего не находит и пропускает дубли.
-
-**Кэш.** Конфиг читается заново каждый запрос — правку видно сразу. А вот таблица
-роутов кэшируется, поэтому после правки роутов чистите кэш MODX.
-
-**Локали.** Новый ключ в `lang/` добавляйте сразу во все четыре — `en`, `ru`,
-`uk`, `de`.
+**Мой класс на событие не вызывается.**
+Проверьте: метод называется именно `handle`; класс перечислен в `listeners` в
+`core/App/config/pbauth.php`; путь к файлу совпадает с namespace
+(`PageBlocks\App\Events\Auth\X` → `core/App/Events/Auth/X.php`). Ошибки внутри
+класса не роняют страницу — ищите их в логе MODX
+(`core/cache/logs/error.log`).
