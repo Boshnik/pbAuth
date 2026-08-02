@@ -73,4 +73,10 @@ return [
     // form profile
     'form_profile_title' => 'Profile',
     'form_profile_submit' => 'Save',
+
+    // impersonate
+    'impersonate_no_manager' => 'Manager login required',
+    'impersonate_denied' => 'Not enough permissions',
+    'impersonate_not_found' => 'User not found',
+    'impersonate_blocked' => 'User is blocked',
 ];

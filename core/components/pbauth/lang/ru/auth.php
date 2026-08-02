@@ -73,4 +73,10 @@ return [
     // form profile
     'form_profile_title' => 'Профиль',
     'form_profile_submit' => 'Сохранить',
+
+    // impersonate
+    'impersonate_no_manager' => 'Требуется вход в панель управления',
+    'impersonate_denied' => 'Недостаточно прав',
+    'impersonate_not_found' => 'Пользователь не найден',
+    'impersonate_blocked' => 'Пользователь заблокирован',
 ];

@@ -15,6 +15,9 @@
  - `lexicon/` is no longer copied into `core/App/` — it belongs to the manager
 
 ### Added
+ - "log in as user" from the manager: a row-menu action in the users grid and a
+   button on the user page, both opening the site under that account. Requires a
+   sudo manager session; turn it off with `'impersonate_enabled' => false`
  - events the site hooks into without touching component code:
    `pbAuthUserSaving`, `pbAuthAfterRegister`, `pbAuthAfterLogin`,
    `pbAuthAfterLogout`, `pbAuthAfterProfileUpdate`, `pbAuthAfterVerifyEmail`,

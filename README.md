@@ -14,6 +14,7 @@ pbAuth – a powerful authentication, registration, and user profile management 
  - CSRF protection and flash messages support
  - Extendable controllers and templates
  - Registration form protection with Google reCAPTCHA v3
+ - "Log in as user" from the manager, for sudo managers
 
 ### Quick Start
 **1. Enabling Routing**

@@ -27,6 +27,7 @@ class pbAuthPackage
         $this->config = array_merge([
             'root' => $root,
             'core' => $core,
+            'assets' => $root . 'assets/components/' . $config['name_lower'] . '/',
             'build' => $root . '_build/',
             'elements' => $root . '_build/elements/',
             'resolvers' => $root . '_build/resolvers/',
@@ -85,6 +86,77 @@ class pbAuthPackage
             $this->builder->putVehicle($vehicle);
         }
         $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($settings) . ' System Settings');
+    }
+
+    protected function plugins()
+    {
+        $plugins = include($this->config['elements'] . 'plugins.php');
+        if (!is_array($plugins)) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Could not package in Plugins');
+
+            return;
+        }
+
+        $this->category_attributes[xPDOTransport::RELATED_OBJECT_ATTRIBUTES]['Plugins'] = [
+            xPDOTransport::UNIQUE_KEY => 'name',
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::RELATED_OBJECTS => true,
+            xPDOTransport::RELATED_OBJECT_ATTRIBUTES => [
+                'PluginEvents' => [
+                    xPDOTransport::PRESERVE_KEYS => true,
+                    xPDOTransport::UPDATE_OBJECT => true,
+                    xPDOTransport::UNIQUE_KEY => ['pluginid', 'event'],
+                ],
+            ],
+        ];
+
+        $objects = [];
+        foreach ($plugins as $name => $data) {
+            /** @var modPlugin $plugin */
+            $plugin = $this->modx->newObject(modPlugin::class);
+            $plugin->fromArray(array_merge([
+                'name' => $name,
+                'category' => 0,
+                'description' => $data['description'] ?? '',
+                'plugincode' => $this->getFileContent($this->config['core'] . 'plugins/' . $data['file'] . '.php'),
+                'static' => false,
+                'source' => 1,
+            ], $data), '', true, true);
+
+            $events = [];
+            foreach ($data['events'] ?? [] as $eventName => $eventData) {
+                /** @var modPluginEvent $event */
+                $event = $this->modx->newObject(modPluginEvent::class);
+                $event->fromArray(array_merge([
+                    'event' => $eventName,
+                    'priority' => 0,
+                    'propertyset' => 0,
+                ], $eventData), '', true, true);
+                $events[] = $event;
+            }
+            if (!empty($events)) {
+                $plugin->addMany($events);
+            }
+
+            $objects[] = $plugin;
+        }
+
+        $this->category->addMany($objects);
+        $this->modx->log(modX::LOG_LEVEL_INFO, 'Packaged in ' . count($objects) . ' Plugins');
+    }
+
+    protected function getFileContent(string $filename): string
+    {
+        if (!file_exists($filename)) {
+            return '';
+        }
+
+        $file = trim(file_get_contents($filename));
+
+        return preg_match('#\<\?php(.*)#is', $file, $data)
+            ? rtrim(rtrim(trim($data[1]), '?>'))
+            : $file;
     }
 
     protected function install()
@@ -153,6 +225,10 @@ class pbAuthPackage
         $vehicle->resolve('file', [
             'source' => $this->config['core'],
             'target' => "return MODX_CORE_PATH . 'components/';",
+        ]);
+        $vehicle->resolve('file', [
+            'source' => $this->config['assets'],
+            'target' => "return MODX_ASSETS_PATH . 'components/';",
         ]);
 
         // Add resolvers into vehicle

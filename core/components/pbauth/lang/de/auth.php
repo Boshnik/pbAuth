@@ -73,4 +73,10 @@ return [
     // form profile
     'form_profile_title' => 'Profil',
     'form_profile_submit' => 'Speichern',
+
+    // impersonate
+    'impersonate_no_manager' => 'Anmeldung im Manager erforderlich',
+    'impersonate_denied' => 'Nicht genügend Rechte',
+    'impersonate_not_found' => 'Benutzer nicht gefunden',
+    'impersonate_blocked' => 'Benutzer ist gesperrt',
 ];

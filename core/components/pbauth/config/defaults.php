@@ -76,7 +76,12 @@ return [
         'logout' => '/',
         'reset_password' => '/',
         'verify_email' => '/',
+        'impersonate' => '/',
     ],
+
+    // «Авторизоваться на сайте» из менеджера: кнопка в гриде пользователей и на
+    // странице пользователя. Работает только для менеджеров с флагом sudo.
+    'impersonate_enabled' => true,
 
     // Разрешить ли `?redirect=` в форме входа. Значение всегда приводится к
     // пути внутри сайта, чтобы форма не превратилась в открытый редирект.
@@ -102,6 +107,7 @@ return [
         'reset_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ResetPasswordController::class,
         'change_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ChangePasswordController::class,
         'confirm_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ConfirmPasswordController::class,
+        'impersonate' => \Boshnik\PbAuth\Http\Controllers\Auth\ImpersonateController::class,
     ],
 
     // Слушатели событий. Ключи — константы Dispatcher.
@@ -114,5 +120,6 @@ return [
         Dispatcher::AFTER_VERIFY_EMAIL => [],
         Dispatcher::AFTER_RESET_PASSWORD => [],
         Dispatcher::AFTER_CHANGE_PASSWORD => [],
+        Dispatcher::AFTER_IMPERSONATE => [],
     ],
 ];

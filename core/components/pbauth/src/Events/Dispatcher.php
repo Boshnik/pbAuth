@@ -26,6 +26,9 @@ class Dispatcher
     public const AFTER_RESET_PASSWORD = 'pbAuthAfterResetPassword';
     public const AFTER_CHANGE_PASSWORD = 'pbAuthAfterChangePassword';
 
+    /** Менеджер вошёл на сайт под чужой учётной записью. */
+    public const AFTER_IMPERSONATE = 'pbAuthAfterImpersonate';
+
     protected static ?self $instance = null;
 
     protected array $listeners = [];
