@@ -79,4 +79,14 @@ return [
     'impersonate_denied' => 'Not enough permissions',
     'impersonate_not_found' => 'User not found',
     'impersonate_blocked' => 'User is blocked',
+
+    // resend verification
+    'resend_verification_title' => 'Resend confirmation link',
+    'resend_verification_success' => 'If the address is registered and not confirmed yet, we have sent the link again. Check your inbox and the spam folder.',
+    'resend_verification_limit_error' => 'Too many attempts. Try again in an hour.',
+    'form_resend_verification_title' => 'Confirmation link',
+    'form_resend_verification_subtitle' => 'Lost the letter? Enter your address and we will send the link again.',
+    'form_resend_verification_submit' => 'Send the link',
+    'resend_prompt' => 'Never received the confirmation letter?',
+    'resend_link' => 'Send it again',
 ];

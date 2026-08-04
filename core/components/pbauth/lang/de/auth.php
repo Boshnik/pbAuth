@@ -79,4 +79,14 @@ return [
     'impersonate_denied' => 'Nicht genügend Rechte',
     'impersonate_not_found' => 'Benutzer nicht gefunden',
     'impersonate_blocked' => 'Benutzer ist gesperrt',
+
+    // resend verification
+    'resend_verification_title' => 'Bestätigungslink erneut senden',
+    'resend_verification_success' => 'Ist die Adresse registriert und noch nicht bestätigt, haben wir den Link erneut gesendet. Prüfen Sie den Posteingang und den Spam-Ordner.',
+    'resend_verification_limit_error' => 'Zu viele Versuche. Versuchen Sie es in einer Stunde erneut.',
+    'form_resend_verification_title' => 'Bestätigungslink',
+    'form_resend_verification_subtitle' => 'Brief verloren? Geben Sie Ihre Adresse ein, wir senden den Link erneut.',
+    'form_resend_verification_submit' => 'Link senden',
+    'resend_prompt' => 'Keine Bestätigungsmail erhalten?',
+    'resend_link' => 'Erneut senden',
 ];

@@ -3,7 +3,6 @@
 namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
-use Boshnik\PageBlocks\Support\Mail;
 use Boshnik\PbAuth\Events\Dispatcher;
 use Boshnik\PbAuth\Support\Config;
 
@@ -87,28 +86,6 @@ class RegisterController extends AuthController
         foreach (Config::get('user_groups', []) as $group) {
             $user->joinGroup($group);
         }
-    }
-
-    protected function sendNotificationEmail(array $data): void
-    {
-        $username = htmlspecialchars($data['username'] ?? '', ENT_QUOTES, 'UTF-8');
-        $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
-        $token = preg_replace('/[^a-f0-9]/i', '', $data['token'] ?? '');
-
-        if (!$email || !$token) {
-            return;
-        }
-
-        $verifyUrl = MODX_SITE_URL . 'verify-email/' . $token;
-
-        Mail::to($email)
-            ->subject(lang('auth.register_subject'))
-            ->view('file:auth/chunks/email.verifyEmail', [
-                'username' => $username,
-                'email' => $email,
-                'verifyUrl' => $verifyUrl,
-            ])
-            ->send();
     }
 
     protected function verifyRecaptcha(string $token, string $secret): bool

@@ -39,4 +39,5 @@
     </button>
 
     <p class="text-center mt-3 mb-0">{lang 'auth.signup_prompt'} <a class="text-dark" href="{route 'pageRegister'}">{lang 'auth.sign_up'}</a></p>
+    <p class="text-center mt-2 mb-0 small">{lang 'auth.resend_prompt'} <a class="text-dark" href="{route 'pageResendVerification'}">{lang 'auth.resend_link'}</a></p>
 </form>

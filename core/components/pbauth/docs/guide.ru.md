@@ -117,6 +117,7 @@ core/App/elements/auth/chunks/
     form.resetPassword.tpl      ввод нового пароля по ссылке из письма
     form.changePassword.tpl     смена пароля в профиле
     form.confirmPassword.tpl    подтверждение пароля
+    form.resendVerification.tpl повторная отправка ссылки подтверждения
     form.profile.tpl            редактирование профиля
     modals/                     те же формы, но для модальных окон
     email.verifyEmail.tpl       письмо со ссылкой подтверждения
@@ -125,6 +126,25 @@ core/App/elements/auth/chunks/
 
 Обёрток тоже две: `auth.tpl` (вход, регистрация, восстановление) и `profile.tpl`
 (профиль и смена пароля — там сбоку меню разделов).
+
+### Если письмо с подтверждением не дошло
+
+После регистрации человек получает письмо со ссылкой, и пока он по ней не
+перешёл, войти не может. Письмо теряется постоянно: попадает в спам, приходит с
+опозданием, адрес указан с опечаткой.
+
+Для этого есть страница `/resend-verification` — она уже подключена, ссылка на
+неё стоит внизу формы входа. Человек вводит свою почту и получает ссылку заново.
+
+Ответ формы **всегда одинаковый**, независимо от того, нашёлся адрес или нет и
+подтверждён ли он уже. Иначе по этой форме можно было бы перебором выяснять,
+какие адреса зарегистрированы на сайте.
+
+Частота ограничена — по умолчанию три письма на адрес в час:
+
+```php
+'resend_verification_limit' => 3,   // 0 — без ограничения
+```
 
 ### Использовать свой шаблон вместо поставочного
 
@@ -454,6 +474,7 @@ Dispatcher::AFTER_REGISTER => [
 | почта подтверждена по ссылке из письма | `Dispatcher::AFTER_VERIFY_EMAIL` | `user` |
 | пароль восстановлен по ссылке | `Dispatcher::AFTER_RESET_PASSWORD` | `user` |
 | пароль изменён в профиле | `Dispatcher::AFTER_CHANGE_PASSWORD` | `user` |
+| ссылка подтверждения отправлена повторно | `Dispatcher::AFTER_RESEND_VERIFICATION` | `user`, `email` |
 | менеджер вошёл под чужой учётной записью | `Dispatcher::AFTER_IMPERSONATE` | `user`, `manager` |
 
 `validated` — это массив с тем, что пришло из формы и прошло проверку.
@@ -670,6 +691,7 @@ return [
         'reset_password'   => 'form.resetPassword',
         'change_password'  => 'form.changePassword',
         'confirm_password' => 'form.confirmPassword',
+        'resend_verification' => 'form.resendVerification',
         'profile'          => 'form.profile',
     ],
 
@@ -703,6 +725,9 @@ return [
     // Сколько регистраций с одного IP в час. 0 — без ограничения
     'register_ip_limit' => 3,
 
+    // Сколько повторных отправок ссылки на один адрес в час. 0 — без ограничения
+    'resend_verification_limit' => 3,
+
     // Свои контроллеры вместо поставочных
     'controllers' => [],
 
@@ -729,6 +754,7 @@ return [
 | `/forgot-password` | `pageForgotPassword` | `forgotPassword` |
 | `/reset-password/{token}` | `pageResetPassword` | `resetPassword` (форма шлётся на `/reset-password`) |
 | `/confirm-password` | `pageConfirmPassword` | `confirmPassword` |
+| `/resend-verification` | `pageResendVerification` | `resendVerification` |
 | `/profile` | `pageProfile` | `updateProfile` |
 | `/profile/password` | `pageChangePassword` | `changePassword` |
 | `/logout` | `logout` | — |

@@ -26,6 +26,7 @@ return [
         'reset_password' => 'form.resetPassword',
         'change_password' => 'form.changePassword',
         'confirm_password' => 'form.confirmPassword',
+        'resend_verification' => 'form.resendVerification',
         'profile' => 'form.profile',
     ],
 
@@ -46,6 +47,12 @@ return [
         'forgot_password' => [
             'honeypot' => 'empty|exclude',
             'email' => 'required|email|exists:user_attributes,email',
+        ],
+        // Без exists: форма не должна отвечать по-разному на известный и
+        // неизвестный адрес — иначе по ней можно перебирать почты.
+        'resend_verification' => [
+            'honeypot' => 'empty|exclude',
+            'email' => 'required|email',
         ],
         'reset_password' => [
             'honeypot' => 'empty|exclude',
@@ -96,6 +103,10 @@ return [
     // Не больше стольких регистраций с одного адреса в час. 0 — без ограничения.
     'register_ip_limit' => 3,
 
+    // Не больше стольких повторных отправок ссылки на один почтовый адрес в час.
+    // 0 — без ограничения.
+    'resend_verification_limit' => 3,
+
     // Подмена контроллера: класс сайта наследует поставочный и переопределяет
     // нужные методы, а роуты компонента начинают вести в него.
     'controllers' => [
@@ -107,6 +118,7 @@ return [
         'reset_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ResetPasswordController::class,
         'change_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ChangePasswordController::class,
         'confirm_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ConfirmPasswordController::class,
+        'resend_verification' => \Boshnik\PbAuth\Http\Controllers\Auth\ResendVerificationController::class,
         'impersonate' => \Boshnik\PbAuth\Http\Controllers\Auth\ImpersonateController::class,
     ],
 
@@ -120,6 +132,7 @@ return [
         Dispatcher::AFTER_VERIFY_EMAIL => [],
         Dispatcher::AFTER_RESET_PASSWORD => [],
         Dispatcher::AFTER_CHANGE_PASSWORD => [],
+        Dispatcher::AFTER_RESEND_VERIFICATION => [],
         Dispatcher::AFTER_IMPERSONATE => [],
     ],
 ];

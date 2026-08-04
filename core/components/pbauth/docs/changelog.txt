@@ -15,6 +15,9 @@
  - `lexicon/` is no longer copied into `core/App/` — it belongs to the manager
 
 ### Added
+ - a page to resend the confirmation link, /resend-verification, linked from the
+   login form. Answers the same way whether the address is known or not, so it
+   cannot be used to probe which emails are registered; rate limited per address
  - "log in as user" from the manager: a row-menu action in the users grid and a
    button on the user page, both opening the site under that account. Requires a
    sudo manager session; turn it off with `'impersonate_enabled' => false`

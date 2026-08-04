@@ -79,4 +79,14 @@ return [
     'impersonate_denied' => 'Недостатньо прав',
     'impersonate_not_found' => 'Користувача не знайдено',
     'impersonate_blocked' => 'Користувача заблоковано',
+
+    // resend verification
+    'resend_verification_title' => 'Повторне надсилання посилання',
+    'resend_verification_success' => 'Якщо адресу зареєстровано і ще не підтверджено, ми надіслали посилання повторно. Перевірте пошту та теку «Спам».',
+    'resend_verification_limit_error' => 'Забагато спроб. Спробуйте за годину.',
+    'form_resend_verification_title' => 'Посилання для підтвердження',
+    'form_resend_verification_subtitle' => 'Лист не надійшов або загубився? Вкажіть адресу, і ми надішлемо посилання знову.',
+    'form_resend_verification_submit' => 'Надіслати посилання',
+    'resend_prompt' => 'Не надійшов лист із підтвердженням?',
+    'resend_link' => 'Надіслати знову',
 ];

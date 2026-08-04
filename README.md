@@ -15,6 +15,7 @@ pbAuth – a powerful authentication, registration, and user profile management 
  - Extendable controllers and templates
  - Registration form protection with Google reCAPTCHA v3
  - "Log in as user" from the manager, for sudo managers
+ - Resending the confirmation link when it was lost or never delivered
 
 ### Quick Start
 **1. Enabling Routing**
@@ -83,4 +84,3 @@ your changes have moved into `App/config/pbauth.php`.
 ### TODO
  - Two-factor authentication (2FA)
  - Authentication and registration via social networks
- - Resending confirmation link if it was lost or not delivered

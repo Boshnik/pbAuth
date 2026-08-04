@@ -26,6 +26,9 @@ class Dispatcher
     public const AFTER_RESET_PASSWORD = 'pbAuthAfterResetPassword';
     public const AFTER_CHANGE_PASSWORD = 'pbAuthAfterChangePassword';
 
+    /** Ссылка подтверждения отправлена повторно. */
+    public const AFTER_RESEND_VERIFICATION = 'pbAuthAfterResendVerification';
+
     /** Менеджер вошёл на сайт под чужой учётной записью. */
     public const AFTER_IMPERSONATE = 'pbAuthAfterImpersonate';
 

@@ -13,6 +13,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/forgot-password', Controllers::action('forgot_password', 'show'))->name('pageForgotPassword');
     Route::post('/forgot-password', Controllers::action('forgot_password', 'forgotPassword'))->name('forgotPassword');
 
+    Route::get('/resend-verification', Controllers::action('resend_verification', 'show'))->name('pageResendVerification');
+    Route::post('/resend-verification', Controllers::action('resend_verification', 'resend'))->name('resendVerification');
+
     Route::get('/reset-password/{token}', Controllers::action('reset_password', 'show'))->name('pageResetPassword');
     Route::post('/reset-password', Controllers::action('reset_password', 'resetPassword'))->name('resetPassword');
 });

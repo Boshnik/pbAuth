@@ -79,4 +79,14 @@ return [
     'impersonate_denied' => 'Недостаточно прав',
     'impersonate_not_found' => 'Пользователь не найден',
     'impersonate_blocked' => 'Пользователь заблокирован',
+
+    // resend verification
+    'resend_verification_title' => 'Повторная отправка ссылки',
+    'resend_verification_success' => 'Если адрес зарегистрирован и ещё не подтверждён, мы отправили ссылку повторно. Проверьте почту и папку «Спам».',
+    'resend_verification_limit_error' => 'Слишком много попыток. Попробуйте через час.',
+    'form_resend_verification_title' => 'Ссылка для подтверждения',
+    'form_resend_verification_subtitle' => 'Письмо не пришло или потерялось? Укажите адрес, и мы отправим ссылку заново.',
+    'form_resend_verification_submit' => 'Отправить ссылку',
+    'resend_prompt' => 'Не пришло письмо с подтверждением?',
+    'resend_link' => 'Отправить заново',
 ];

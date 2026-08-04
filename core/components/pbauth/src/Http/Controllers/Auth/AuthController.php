@@ -3,6 +3,7 @@
 namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PageBlocks\Support\Mail;
 use Boshnik\PbAuth\Support\Config;
 use PageBlocks\App\Http\Controllers\Controller;
 
@@ -107,6 +108,32 @@ class AuthController extends Controller
         Dispatcher::fire(Dispatcher::AFTER_VERIFY_EMAIL, ['user' => $user]);
 
         return redirect($this->redirectTo('verify_email'));
+    }
+
+    /**
+     * Письмо со ссылкой подтверждения. Живёт здесь, а не в RegisterController,
+     * потому что то же письмо шлёт и повторная отправка.
+     */
+    protected function sendNotificationEmail(array $data): void
+    {
+        $username = htmlspecialchars($data['username'] ?? '', ENT_QUOTES, 'UTF-8');
+        $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
+        $token = preg_replace('/[^a-f0-9]/i', '', $data['token'] ?? '');
+
+        if (!$email || !$token) {
+            return;
+        }
+
+        $verifyUrl = MODX_SITE_URL . 'verify-email/' . $token;
+
+        Mail::to($email)
+            ->subject(lang('auth.register_subject'))
+            ->view('file:auth/chunks/email.verifyEmail', [
+                'username' => $username,
+                'email' => $email,
+                'verifyUrl' => $verifyUrl,
+            ])
+            ->send();
     }
 
     public function getProcessorError($response)

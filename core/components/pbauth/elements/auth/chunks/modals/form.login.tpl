@@ -42,4 +42,5 @@
         <span>{lang 'auth.signup_prompt'}</span>
         <button type="button" class="text-dark btn btn-link p-0" data-bs-target="#authRegister" data-bs-toggle="modal">{lang 'auth.sign_up'}</button>
     </p>
+    <p class="text-center mt-2 mb-0 small">{lang 'auth.resend_prompt'} <a class="text-dark" href="{route 'pageResendVerification'}">{lang 'auth.resend_link'}</a></p>
 </form>
