@@ -49,7 +49,11 @@ class AuthController extends Controller
         // рисуется оно в шаблоне-обёртке любой страницы профиля.
         $data['two_factor_available'] = (bool)Config::get('two_factor_enabled', true);
 
-        return view(Config::get("views.$view"), $data);
+        // Обычно хватает двух обёрток на все страницы, но отдельной странице
+        // можно назначить свою: `views.two_factor` перебивает `views.profile`.
+        $template = Config::get("views.$action") ?: Config::get("views.$view");
+
+        return view($template, $data);
     }
 
     protected function redirectTo(string $action, string $default = '/'): string
