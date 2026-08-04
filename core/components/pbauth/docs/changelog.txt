@@ -34,6 +34,9 @@
    under `core/App/`, which on a real site also meant the site's own routes,
    lexicons and controllers. It now removes only what the installer recorded in
    `core/App/.pbauth-installed.json` and only while the file is unchanged
+ - the forgot-password form answered differently for a known and an unknown
+   address, so it could be used to enumerate registered emails. It now replies
+   the same way either way, and is rate limited per address
  - `unique:modUser` / `exists:modUserProfile` never matched anything: the
    validator queries a table, not a MODX class. Now `users` / `user_attributes`,
    so duplicate usernames and emails are actually rejected

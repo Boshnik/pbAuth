@@ -3,7 +3,7 @@
 return [
     // Controller
     'user_confirm_password_success' => 'Ihr Passwort wurde bestätigt.',
-    'forgot_password_success' => 'Ein Link zum Zurücksetzen wird gesendet, falls das Konto existiert.',
+    'forgot_password_success' => 'Ist die Adresse registriert und bestätigt, haben wir einen Link zum Zurücksetzen des Passworts gesendet. Prüfen Sie den Posteingang und den Spam-Ordner.',
     'update_profile_success' => 'Profil erfolgreich aktualisiert.',
     'register_error' => 'Benutzer konnte nicht registriert werden.',
     'register_success' => 'Überprüfen Sie Ihre E-Mail für den Bestätigungslink.',
@@ -89,4 +89,5 @@ return [
     'form_resend_verification_submit' => 'Link senden',
     'resend_prompt' => 'Keine Bestätigungsmail erhalten?',
     'resend_link' => 'Erneut senden',
+    'forgot_password_limit_error' => 'Zu viele Versuche. Versuchen Sie es in einer Stunde erneut.',
 ];

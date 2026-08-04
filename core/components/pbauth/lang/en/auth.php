@@ -3,7 +3,7 @@
 return [
     // Controllers
     'user_confirm_password_success' => 'Your password has been confirmed.',
-    'forgot_password_success' => 'A reset link will be sent if the account exists.',
+    'forgot_password_success' => 'If the address is registered and confirmed, we have sent a link to reset the password. Check your inbox and the spam folder.',
     'update_profile_success' => 'Profile successfully updated.',
     'register_error' => 'Could not register user.',
     'register_success' => 'Check your email for the confirmation link.',
@@ -89,4 +89,5 @@ return [
     'form_resend_verification_submit' => 'Send the link',
     'resend_prompt' => 'Never received the confirmation letter?',
     'resend_link' => 'Send it again',
+    'forgot_password_limit_error' => 'Too many attempts. Try again in an hour.',
 ];

@@ -44,12 +44,12 @@ return [
             'email' => 'required|email|unique:user_attributes',
             'password' => 'required|string|min:8|confirmed',
         ],
-        'forgot_password' => [
-            'honeypot' => 'empty|exclude',
-            'email' => 'required|email|exists:user_attributes,email',
-        ],
         // Без exists: форма не должна отвечать по-разному на известный и
         // неизвестный адрес — иначе по ней можно перебирать почты.
+        'forgot_password' => [
+            'honeypot' => 'empty|exclude',
+            'email' => 'required|email',
+        ],
         'resend_verification' => [
             'honeypot' => 'empty|exclude',
             'email' => 'required|email',
@@ -106,6 +106,9 @@ return [
     // Не больше стольких повторных отправок ссылки на один почтовый адрес в час.
     // 0 — без ограничения.
     'resend_verification_limit' => 3,
+
+    // То же для писем со ссылкой на восстановление пароля.
+    'forgot_password_limit' => 3,
 
     // Подмена контроллера: класс сайта наследует поставочный и переопределяет
     // нужные методы, а роуты компонента начинают вести в него.
