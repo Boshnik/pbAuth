@@ -27,6 +27,8 @@ return [
         'change_password' => 'form.changePassword',
         'confirm_password' => 'form.confirmPassword',
         'resend_verification' => 'form.resendVerification',
+        'two_factor_challenge' => 'form.twoFactorChallenge',
+        'two_factor' => 'form.twoFactor',
         'profile' => 'form.profile',
     ],
 
@@ -66,6 +68,15 @@ return [
         'confirm_password' => [
             'honeypot' => 'empty',
             'password' => 'required|string|min:8',
+        ],
+        'two_factor_challenge' => [
+            'code' => 'required|string|min:6|max:12',
+        ],
+        'two_factor_enable' => [
+            'code' => 'required|string|min:6|max:6',
+        ],
+        'two_factor_disable' => [
+            'password' => 'required|string',
         ],
         'profile' => [
             'username' => 'required|unique:users,username,:user_id',
@@ -110,6 +121,21 @@ return [
     // То же для писем со ссылкой на восстановление пароля.
     'forgot_password_limit' => 3,
 
+    // Двухфакторная проверка. Выключатель убирает раздел из профиля и снимает
+    // требование кода при входе — уже подключённые секреты при этом сохраняются.
+    'two_factor_enabled' => true,
+    // Сколько соседних интервалов по 30 секунд принимать, кроме текущего:
+    // часы на телефоне и на сервере всегда немного расходятся.
+    'two_factor_window' => 1,
+    // Сколько секунд между вводом пароля и вводом кода.
+    'two_factor_challenge_ttl' => 300,
+    // Попыток ввода кода, после которых ожидание сбрасывается. 0 — без предела.
+    'two_factor_attempts' => 5,
+    // Сколько резервных кодов выдавать.
+    'two_factor_backup_codes' => 8,
+    // Чьё имя показывает приложение-аутентификатор. Пусто — название сайта.
+    'two_factor_issuer' => '',
+
     // Подмена контроллера: класс сайта наследует поставочный и переопределяет
     // нужные методы, а роуты компонента начинают вести в него.
     'controllers' => [
@@ -122,6 +148,7 @@ return [
         'change_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ChangePasswordController::class,
         'confirm_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ConfirmPasswordController::class,
         'resend_verification' => \Boshnik\PbAuth\Http\Controllers\Auth\ResendVerificationController::class,
+        'two_factor' => \Boshnik\PbAuth\Http\Controllers\Auth\TwoFactorController::class,
         'impersonate' => \Boshnik\PbAuth\Http\Controllers\Auth\ImpersonateController::class,
     ],
 
@@ -136,6 +163,8 @@ return [
         Dispatcher::AFTER_RESET_PASSWORD => [],
         Dispatcher::AFTER_CHANGE_PASSWORD => [],
         Dispatcher::AFTER_RESEND_VERIFICATION => [],
+        Dispatcher::TWO_FACTOR_ENABLED => [],
+        Dispatcher::TWO_FACTOR_DISABLED => [],
         Dispatcher::AFTER_IMPERSONATE => [],
     ],
 ];

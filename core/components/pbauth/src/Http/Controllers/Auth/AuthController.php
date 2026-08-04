@@ -45,6 +45,10 @@ class AuthController extends Controller
             $data['form'] = $form;
         }
 
+        // Меню профиля должно знать, показывать ли раздел второго фактора, а
+        // рисуется оно в шаблоне-обёртке любой страницы профиля.
+        $data['two_factor_available'] = (bool)Config::get('two_factor_enabled', true);
+
         return view(Config::get("views.$view"), $data);
     }
 
@@ -73,18 +77,22 @@ class AuthController extends Controller
     }
 
     /**
-     * Логинит пользователя в текущем контексте и во всех дополнительных.
+     * Открывает пользователю сессию в текущем контексте и во всех дополнительных.
+     *
+     * Через addSessionContext(), а не правкой $_SESSION напрямую: MODX при этом
+     * ещё и обновляет отметку последнего входа и внутреннее состояние
+     * пользователя. Процессор входа тут не подходит — им пользуются те места,
+     * где пароля на руках уже нет: подтверждение почты, второй фактор, вход
+     * менеджера под чужой учётной записью.
      */
     protected function authenticate($user): void
     {
-        $this->modx->user = $user;
-        $this->modx->getUser();
-
         $defaultContext = $this->modx->context->key ?? 'web';
-        $_SESSION['modx.user.contextTokens'][$defaultContext] = $user->id;
+
+        $user->addSessionContext($defaultContext);
 
         foreach ($this->getContexts() as $context) {
-            $_SESSION['modx.user.contextTokens'][$context] = $user->id;
+            $user->addSessionContext($context);
         }
     }
 

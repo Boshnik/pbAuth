@@ -44,11 +44,7 @@ class ImpersonateController extends AuthController
             abort(403, lang('auth.impersonate_blocked'));
         }
 
-        $target->addSessionContext($this->modx->context->key ?? 'web');
-
-        foreach ($this->getContexts() as $context) {
-            $target->addSessionContext($context);
-        }
+        $this->authenticate($target);
 
         Dispatcher::fire(Dispatcher::AFTER_IMPERSONATE, [
             'user' => $target,

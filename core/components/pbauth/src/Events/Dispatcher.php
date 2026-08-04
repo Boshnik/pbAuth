@@ -26,6 +26,10 @@ class Dispatcher
     public const AFTER_RESET_PASSWORD = 'pbAuthAfterResetPassword';
     public const AFTER_CHANGE_PASSWORD = 'pbAuthAfterChangePassword';
 
+    /** Пользователь подключил или отключил второй фактор. */
+    public const TWO_FACTOR_ENABLED = 'pbAuthTwoFactorEnabled';
+    public const TWO_FACTOR_DISABLED = 'pbAuthTwoFactorDisabled';
+
     /** Ссылка подтверждения отправлена повторно. */
     public const AFTER_RESEND_VERIFICATION = 'pbAuthAfterResendVerification';
 

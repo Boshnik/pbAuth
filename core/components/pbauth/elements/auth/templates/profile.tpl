@@ -10,6 +10,11 @@
                 <li class="list-group-item{if $form == 'form.changePassword'} fw-bold{/if}">
                     <a href="{route 'pageChangePassword'}" class="nav-link text-dark">{lang 'auth.change_password_title'}</a>
                 </li>
+                {if $two_factor_available}
+                    <li class="list-group-item{if $form == 'form.twoFactor'} fw-bold{/if}">
+                        <a href="{route 'pageTwoFactorSettings'}" class="nav-link text-dark">{lang 'auth.two_factor_link'}</a>
+                    </li>
+                {/if}
                 <li class="list-group-item">
                     <a href="{route 'logout'}" class="nav-link text-danger">Logout</a>
                 </li>

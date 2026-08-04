@@ -5,6 +5,7 @@ namespace Boshnik\PbAuth\Http\Controllers\Auth;
 use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PbAuth\Events\Dispatcher;
 use Boshnik\PbAuth\Support\Config;
+use Boshnik\PbAuth\Support\TwoFactor;
 
 class LoginController extends AuthController
 {
@@ -33,6 +34,10 @@ class LoginController extends AuthController
             $request->username = $user->username;
         }
 
+        if (Config::get('two_factor_enabled', true) && TwoFactor::isEnabled($user)) {
+            return $this->startTwoFactorChallenge($user, $request);
+        }
+
         $response = $this->modx->runProcessor($this->getProccesorPath('login'), [
             'username' => $request->username,
             'password' => $request->password,
@@ -48,6 +53,46 @@ class LoginController extends AuthController
         Dispatcher::fire(Dispatcher::AFTER_LOGIN, ['user' => $user]);
 
         return response()->success('', $this->loginRedirect($request));
+    }
+
+    /**
+     * Пароль верный, но нужен ещё код: сессию не открываем.
+     *
+     * Процессор входа MODX здесь не годится — он сразу логинит. Поэтому пароль
+     * сверяем сами и проверяем то же, что проверил бы он: активен ли аккаунт и
+     * не заблокирован ли. В сессии остаётся только id и срок ожидания; ни пароля,
+     * ни открытого контекста до верного кода.
+     */
+    protected function startTwoFactorChallenge($user, Request $request)
+    {
+        if (!$user->passwordMatches($request->password)) {
+            return response()->error('', [
+                'password' => $this->modx->lexicon('user_err_password'),
+            ]);
+        }
+
+        if (!$user->get('active')) {
+            return response()->error('', [
+                'username' => $this->modx->lexicon('user_err_not_activated'),
+            ]);
+        }
+
+        $profile = $user->getOne('Profile');
+        $blockedUntil = (int)($profile ? $profile->get('blockeduntil') : 0);
+        if ($profile && ($profile->get('blocked') || ($blockedUntil && $blockedUntil > time()))) {
+            return response()->error('', [
+                'username' => $this->modx->lexicon('login_blocked'),
+            ]);
+        }
+
+        $_SESSION[TwoFactorController::PENDING] = [
+            'id' => $user->get('id'),
+            'expires' => time() + (int)Config::get('two_factor_challenge_ttl', 300),
+            'attempts' => 0,
+            'redirect' => $this->loginRedirect($request),
+        ];
+
+        return response()->success('', route('pageTwoFactorChallenge'));
     }
 
     public function logout()
