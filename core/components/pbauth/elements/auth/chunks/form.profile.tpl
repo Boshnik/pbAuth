@@ -1,4 +1,5 @@
-{set $photo = $modx->user->photo ?: $modx->user->getGravatar()}
+{set $photo = $modx->user->Profile ? ($modx->user->Profile->photo|trim) : ''}
+{set $avatar = $photo ?: $modx->user->getGravatar()}
 <form action="{route 'updateProfile'}" method="post" class="border rounded-4 p-5" id="auth-profile" enctype="multipart/form-data" pb-form data-noclear>
     <input type="hidden" name="_token" value="{csrf_token}">
     <input type="hidden" name="honeypot" value="">
@@ -17,10 +18,12 @@
     <div class="form-group mb-3">
         <div class="d-flex flex-column align-items-center gap-2 text-dark">
             <div class="avatar d-flex align-items-center justify-content-center rounded-5 bg-secondary-subtle overflow-hidden">
-                <img src="{$photo}" width="64" height="64" id="auth-photo" alt="{$modx->user->username}">
+                <img src="{$avatar}" width="64" height="64" id="auth-photo" alt="{$modx->user->username}">
             </div>
             <div class="d-flex flex-column mt-2">
-                <button type="button" class="btn btn-sm btn-danger" onclick="document.querySelector('#auth-profile [name=photo]').value = '';document.querySelector('#auth-newphoto').style='';this.remove()">{lang 'auth.delete_photo'}</button>
+                {if $photo}
+                    <button type="button" class="btn btn-sm btn-danger" onclick="document.querySelector('#auth-profile [name=photo]').value = '';document.querySelector('#auth-newphoto').style='';this.remove()">{lang 'auth.delete_photo'}</button>
+                {/if}
                 <input type="file" name="newphoto" class="form-control" id="auth-newphoto"{if $photo} style="display:none"{/if}>
                 <span class="invalid-feedback" data-error="newphoto">{$errors.newphoto}</span>
             </div>
