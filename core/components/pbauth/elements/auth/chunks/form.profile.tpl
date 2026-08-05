@@ -1,4 +1,7 @@
-{set $photo = $modx->user->Profile ? ($modx->user->Profile->photo|trim) : ''}
+{* modUser полей профиля не отдаёт - $modx->user->email и остальные всегда
+   null, - поэтому форма читает их с профиля. *}
+{set $up = $modx->user->Profile}
+{set $photo = ($up->photo ?: '')|trim}
 {set $avatar = $photo ?: $modx->user->getGravatar()}
 <form action="{route 'updateProfile'}" method="post" class="border rounded-4 p-5" id="auth-profile" enctype="multipart/form-data" pb-form data-noclear>
     <input type="hidden" name="_token" value="{csrf_token}">
@@ -38,19 +41,19 @@
 
     <div class="form-group mb-3">
         <label class="mb-2" for="fullname">{lang 'auth.field_fullname'}</label>
-        <input type="text" name="fullname" id="fullname" class="form-control{if $errors.fullname} is-invalid{/if}" value="{$old_input.fullname ?: $modx->user->fullname}">
+        <input type="text" name="fullname" id="fullname" class="form-control{if $errors.fullname} is-invalid{/if}" value="{$old_input.fullname ?: $up->fullname}">
         <span class="invalid-feedback" data-error="fullname">{$errors.fullname}</span>
     </div>
 
     <div class="form-group mb-3">
         <label class="mb-2" for="email">{lang 'auth.field_email'}</label>
-        <input type="email" name="email" id="email" class="form-control{if $errors.email} is-invalid{/if}" value="{$old_input.email ?: $modx->user->email}" required>
+        <input type="email" name="email" id="email" class="form-control{if $errors.email} is-invalid{/if}" value="{$old_input.email ?: $up->email}" required>
         <span class="invalid-feedback" data-error="email">{$errors.email}</span>
     </div>
 
     <div class="form-group mb-3">
         <label class="mb-2" for="phone">{lang 'auth.field_phone'}</label>
-        <input type="text" name="phone" id="phone" class="form-control{if $errors.phone} is-invalid{/if}" value="{$modx->user->phone}">
+        <input type="text" name="phone" id="phone" class="form-control{if $errors.phone} is-invalid{/if}" value="{$old_input.phone ?: $up->phone}">
         <span class="invalid-feedback" data-error="phone">{$errors.phone}</span>
     </div>
 
