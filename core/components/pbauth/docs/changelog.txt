@@ -26,6 +26,9 @@
  - a page to resend the confirmation link, /resend-verification, linked from the
    login form. Answers the same way whether the address is known or not, so it
    cannot be used to probe which emails are registered; rate limited per address
+ - a "view on the site" button next to it, opening the user's public page rather
+   than signing in as them. The address is a template in the `pbauth_user_page`
+   system setting ({id}, {username}); empty hides the button
  - "log in as user" from the manager: a row-menu action in the users grid and a
    button on the user page, both opening the site under that account. Requires a
    sudo manager session; turn it off with `'impersonate_enabled' => false`

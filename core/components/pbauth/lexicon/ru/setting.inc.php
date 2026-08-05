@@ -10,3 +10,8 @@ $_lang['setting_pbauth_recaptcha_public_key_desc'] = 'Публичный клю�
 
 $_lang['setting_pbauth_recaptcha_secret_key'] = 'Секретный ключ ReCAPTCHA';
 $_lang['setting_pbauth_recaptcha_secret_key_desc'] = 'Секретный ключ сайта (Secret key), используемый на сервере для проверки токенов reCAPTCHA.';
+
+$_lang['area_manager'] = 'Менеджер';
+
+$_lang['setting_pbauth_user_page'] = 'Страница пользователя';
+$_lang['setting_pbauth_user_page_desc'] = 'Адрес публичной страницы пользователя. {id} и {username} подставляются из его данных. Абсолютный адрес (https://…) используется как есть. Пусто — кнопка «Посмотреть на сайте» не показывается.';

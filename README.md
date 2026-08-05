@@ -14,7 +14,7 @@ pbAuth – a powerful authentication, registration, and user profile management 
  - CSRF protection and flash messages support
  - Extendable controllers and templates
  - Registration form protection with Google reCAPTCHA v3
- - "Log in as user" from the manager, for sudo managers
+ - "Log in as user" and "View on the site" buttons on users in the manager
  - Resending the confirmation link when it was lost or never delivered
  - Two-factor confirmation at login (TOTP), with backup codes
  - Sign in through Google, Yandex, Mail.ru, GitHub, Facebook and Telegram
