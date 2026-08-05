@@ -55,6 +55,16 @@ return [
         // 'register' => \PageBlocks\App\Http\Controllers\Auth\RegisterController::class,
     ],
 
+    // Вход через соцсети. Провайдер без доступов просто не показывается.
+    // Адрес возврата у провайдера: https://ваш-сайт/auth/<провайдер>/callback
+    'social' => [
+        // 'providers' => [
+        //     'google'   => ['client_id' => '', 'client_secret' => ''],
+        //     'yandex'   => ['client_id' => '', 'client_secret' => ''],
+        //     'telegram' => ['bot_name' => '', 'bot_token' => ''],
+        // ],
+    ],
+
     // Слушатель — класс с методом handle(array $params, string $event) либо
     // любой callable. Исключение в слушателе логируется и не роняет действие.
     'listeners' => [

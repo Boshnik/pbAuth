@@ -44,4 +44,6 @@
     </button>
 
     <p class="text-center mt-3 mb-0">{lang 'auth.login_prompt'} <a class="text-dark" href="{route 'pageLogin'}">{lang 'auth.log_in'}</a></p>
+
+    {include 'file:auth/chunks/social.buttons.tpl'}
 </form>

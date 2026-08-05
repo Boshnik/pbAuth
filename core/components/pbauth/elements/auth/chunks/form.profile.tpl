@@ -62,3 +62,5 @@
         <span role="status">{lang 'auth.form_profile_submit'}</span>
     </button>
 </form>
+
+{include 'file:auth/chunks/social.accounts.tpl'}

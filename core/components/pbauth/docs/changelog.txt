@@ -15,6 +15,10 @@
  - `lexicon/` is no longer copied into `core/App/` — it belongs to the manager
 
 ### Added
+ - sign in through Google, Yandex, Mail.ru, GitHub, Facebook and Telegram. An
+   existing account is only joined when the provider vouches that the address
+   belongs to the person; otherwise the site asks for a password login and a
+   link from the profile. Adds the component's first table, pba_social_accounts
  - two-factor confirmation at login (TOTP, RFC 6238) — every user turns it on for
    themselves under the profile. Works with any authenticator app; backup codes
    for a lost phone; the secret lives in the profile's `extended`, no new table.
@@ -50,6 +54,9 @@
    were used on MODX 3
 
 ### Upgrading
+ - the package applies the migration itself; on a host deployed by file, run
+   `php core/components/pageblocks/vendor/bin/phinx migrate
+   --configuration=core/components/pbauth/src/phinx.php --environment=production`
  - the upgrade deletes `App/routes/auth.php` when it is still byte-identical to
    the shipped one. If you edited it, it stays and keeps working — pbAuth then
    leaves its own routes unregistered, so nothing is duplicated. Delete the file

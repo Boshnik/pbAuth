@@ -4,6 +4,7 @@ namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PbAuth\Social\SocialAccounts;
 use Boshnik\PbAuth\Support\Config;
 
 class ChangePasswordController extends AuthController
@@ -25,6 +26,10 @@ class ChangePasswordController extends AuthController
                 'old_password' => lang('auth.old_password_error'),
             ]);
         }
+
+        // Пароль задан осознанно — значит пользователь больше не заперт в
+        // соцсети и может отвязать последнюю.
+        SocialAccounts::markPasswordless($this->modx->user, false);
 
         Dispatcher::fire(Dispatcher::AFTER_CHANGE_PASSWORD, ['user' => $this->modx->user]);
 

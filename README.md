@@ -17,6 +17,7 @@ pbAuth – a powerful authentication, registration, and user profile management 
  - "Log in as user" from the manager, for sudo managers
  - Resending the confirmation link when it was lost or never delivered
  - Two-factor confirmation at login (TOTP), with backup codes
+ - Sign in through Google, Yandex, Mail.ru, GitHub, Facebook and Telegram
 
 ### Quick Start
 **1. Enabling Routing**
@@ -83,4 +84,4 @@ when it is still byte-identical to the shipped one; otherwise delete it yourself
 your changes have moved into `App/config/pbauth.php`.
 
 ### TODO
- - Authentication and registration via social networks
+ - Sign in with Apple, VK ID

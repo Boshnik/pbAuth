@@ -4,6 +4,7 @@ namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PbAuth\Social\SocialAccounts;
 use Boshnik\PbAuth\Support\Config;
 
 class ResetPasswordController extends AuthController
@@ -50,6 +51,10 @@ class ResetPasswordController extends AuthController
         if ($response->isError()) {
             return $this->getProcessorError($response);
         }
+
+        // Пароль задан осознанно — значит пользователь больше не заперт в
+        // соцсети и может отвязать последнюю.
+        SocialAccounts::markPasswordless($user, false);
 
         Dispatcher::fire(Dispatcher::AFTER_RESET_PASSWORD, ['user' => $user]);
 

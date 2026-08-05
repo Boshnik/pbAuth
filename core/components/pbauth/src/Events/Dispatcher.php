@@ -30,6 +30,10 @@ class Dispatcher
     public const TWO_FACTOR_ENABLED = 'pbAuthTwoFactorEnabled';
     public const TWO_FACTOR_DISABLED = 'pbAuthTwoFactorDisabled';
 
+    /** Соцсеть привязана к аккаунту или отвязана от него. */
+    public const SOCIAL_LINKED = 'pbAuthSocialLinked';
+    public const SOCIAL_UNLINKED = 'pbAuthSocialUnlinked';
+
     /** Ссылка подтверждения отправлена повторно. */
     public const AFTER_RESEND_VERIFICATION = 'pbAuthAfterResendVerification';
 

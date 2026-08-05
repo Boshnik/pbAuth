@@ -29,6 +29,7 @@ return [
         'resend_verification' => 'form.resendVerification',
         'two_factor_challenge' => 'form.twoFactorChallenge',
         'two_factor' => 'form.twoFactor',
+        'social_email' => 'form.socialEmail',
         'profile' => 'form.profile',
     ],
 
@@ -77,6 +78,9 @@ return [
         ],
         'two_factor_disable' => [
             'password' => 'required|string',
+        ],
+        'social_email' => [
+            'email' => 'required|email|unique:user_attributes',
         ],
         'profile' => [
             'username' => 'required|unique:users,username,:user_id',
@@ -136,6 +140,25 @@ return [
     // Чьё имя показывает приложение-аутентификатор. Пусто — название сайта.
     'two_factor_issuer' => '',
 
+    // Вход через сторонние службы. Доступы задаются по провайдерам; провайдер
+    // без доступов просто не показывается.
+    'social' => [
+        'enabled' => true,
+        // Спрашивать почту, если провайдер её не дал (Telegram не даёт никогда).
+        // false — заводить аккаунт вовсе без почты.
+        'require_email' => true,
+        'providers' => [
+            'google' => ['client_id' => '', 'client_secret' => ''],
+            'yandex' => ['client_id' => '', 'client_secret' => ''],
+            'mailru' => ['client_id' => '', 'client_secret' => ''],
+            'github' => ['client_id' => '', 'client_secret' => ''],
+            'facebook' => ['client_id' => '', 'client_secret' => ''],
+            'telegram' => ['bot_name' => '', 'bot_token' => ''],
+        ],
+        // Свои драйверы: 'ключ' => Класс::class
+        'drivers' => [],
+    ],
+
     // Подмена контроллера: класс сайта наследует поставочный и переопределяет
     // нужные методы, а роуты компонента начинают вести в него.
     'controllers' => [
@@ -149,6 +172,7 @@ return [
         'confirm_password' => \Boshnik\PbAuth\Http\Controllers\Auth\ConfirmPasswordController::class,
         'resend_verification' => \Boshnik\PbAuth\Http\Controllers\Auth\ResendVerificationController::class,
         'two_factor' => \Boshnik\PbAuth\Http\Controllers\Auth\TwoFactorController::class,
+        'social' => \Boshnik\PbAuth\Http\Controllers\Auth\SocialController::class,
         'impersonate' => \Boshnik\PbAuth\Http\Controllers\Auth\ImpersonateController::class,
     ],
 
@@ -165,6 +189,8 @@ return [
         Dispatcher::AFTER_RESEND_VERIFICATION => [],
         Dispatcher::TWO_FACTOR_ENABLED => [],
         Dispatcher::TWO_FACTOR_DISABLED => [],
+        Dispatcher::SOCIAL_LINKED => [],
+        Dispatcher::SOCIAL_UNLINKED => [],
         Dispatcher::AFTER_IMPERSONATE => [],
     ],
 ];

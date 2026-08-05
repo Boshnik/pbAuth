@@ -4,6 +4,7 @@ namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PbAuth\Events\Dispatcher;
+use Boshnik\PbAuth\Models\PbaSocialAccount;
 use Boshnik\PbAuth\Support\Config;
 
 class ProfileController extends AuthController
@@ -12,7 +13,25 @@ class ProfileController extends AuthController
     {
         return $this->page('profile', 'profile', [
             'title' => lang('auth.profile_title'),
+            // Какие сети уже привязаны — чтобы чанк показал «отвязать» вместо
+            // «привязать». Ключ провайдера => true.
+            'social_linked' => $this->linkedProviders(),
         ]);
+    }
+
+    protected function linkedProviders(): array
+    {
+        $user = $this->modx->user;
+        if (!$user || !$user->id) {
+            return [];
+        }
+
+        $linked = [];
+        foreach (PbaSocialAccount::forUser((int)$user->id) as $account) {
+            $linked[$account->provider] = true;
+        }
+
+        return $linked;
     }
 
     public function updateProfile(Request $request)

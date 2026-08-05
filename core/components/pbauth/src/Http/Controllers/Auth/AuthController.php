@@ -4,6 +4,7 @@ namespace Boshnik\PbAuth\Http\Controllers\Auth;
 
 use Boshnik\PbAuth\Events\Dispatcher;
 use Boshnik\PageBlocks\Support\Mail;
+use Boshnik\PbAuth\Social\DriverRegistry;
 use Boshnik\PbAuth\Support\Config;
 use PageBlocks\App\Http\Controllers\Controller;
 
@@ -49,11 +50,45 @@ class AuthController extends Controller
         // рисуется оно в шаблоне-обёртке любой страницы профиля.
         $data['two_factor_available'] = (bool)Config::get('two_factor_enabled', true);
 
+        // Провайдер возвращает человека переходом по ссылке, поэтому сообщение
+        // об исходе везём через сессию и показываем на первой же странице.
+        if (!empty($_SESSION['pbauth.social_message'])) {
+            $data['social_message'] = $_SESSION['pbauth.social_message'];
+            unset($_SESSION['pbauth.social_message']);
+        }
+
+        $data['social_providers'] = $this->socialProviders();
+
         // Обычно хватает двух обёрток на все страницы, но отдельной странице
         // можно назначить свою: `views.two_factor` перебивает `views.profile`.
         $template = Config::get("views.$action") ?: Config::get("views.$view");
 
         return view($template, $data);
+    }
+
+    /**
+     * Настроенные провайдеры для кнопок входа.
+     *
+     * Список собирается здесь, а не тегом в шаблоне: чанк с кнопками включают
+     * из разных форм, и данные ему должна приносить страница.
+     */
+    protected function socialProviders(): array
+    {
+        $providers = [];
+
+        foreach (DriverRegistry::available() as $key => $driver) {
+            $config = Config::get("social.providers.$key", []);
+            $providers[$key] = [
+                'key' => $key,
+                'title' => lang("auth.social_$key"),
+                'redirect' => $driver->isRedirectBased(),
+                'url' => route('socialRedirect', ['provider' => $key]),
+                'callback' => rtrim(MODX_SITE_URL, '/') . '/auth/' . $key . '/callback',
+                'bot_name' => $config['bot_name'] ?? '',
+            ];
+        }
+
+        return $providers;
     }
 
     protected function redirectTo(string $action, string $default = '/'): string

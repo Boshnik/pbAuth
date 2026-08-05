@@ -46,4 +46,6 @@
         <span>{lang 'auth.login_prompt'}</span>
         <button type="button" class="text-dark btn btn-link p-0" data-bs-target="#authLogin" data-bs-toggle="modal">{lang 'auth.log_in'}</button>
     </p>
+
+    {include 'file:auth/chunks/social.buttons.tpl'}
 </form>
