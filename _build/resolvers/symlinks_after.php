@@ -18,6 +18,10 @@ if ($transport->xpdo) {
     $cache = $modx->getCacheManager();
 
     $files = [
+        'assets' => [
+            'link'   => $base . 'assets/components/pbauth',
+            'target' => MODX_ASSETS_PATH . 'components/pbauth/',
+        ],
         'core' => [
             'link'   => $base . 'core/components/pbauth',
             'target' => MODX_CORE_PATH . 'components/pbauth/',

@@ -7,6 +7,7 @@ if ($transport->xpdo) {
     $base = MODX_BASE_PATH . 'Extras/pbAuth/';
 
     $files = [
+        $base . 'assets/components/pbauth',
         $base . 'core/components/pbauth',
     ];
 
