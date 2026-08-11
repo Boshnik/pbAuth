@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'user_page' => [
+        'xtype' => 'textfield',
+        'value' => 'users/{id}',
+        'area' => 'manager',
+    ],
     'recaptcha_service' => [
         'xtype' => 'textfield',
         'value' => 'Google reCAPTCHA',
