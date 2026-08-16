@@ -19,12 +19,6 @@ Ext.onReady(function () {
 
     var cfg = (window.pbAuth && pbAuth.mgr) || {};
     var lang = cfg.lang || {};
-
-    // Иконки шрифта менеджера, как их подключает PageBlocks: разметкой прямо в
-    // подписи, а не через iconCls — в контекстном меню грида iconCls не виден.
-    var withIcon = function (icon, text) {
-        return '<i class="icon icon-' + icon + '"></i> ' + text;
-    };
     var impersonate = !!cfg.impersonate;
     var template = cfg.userPage || '';
 
@@ -97,7 +91,7 @@ Ext.onReady(function () {
 
                 if (template) {
                     menu.push({
-                        text: withIcon('eye', lang.view || 'View on the site'),
+                        text: lang.view || 'View on the site',
                         handler: function () {
                             var rec = record();
                             openUserPage(field(rec, 'id'), field(rec, 'username'));
@@ -107,7 +101,7 @@ Ext.onReady(function () {
 
                 if (impersonate) {
                     menu.push({
-                        text: withIcon('sign-in', lang.impersonate || 'Log in as user'),
+                        text: lang.impersonate || 'Log in as user',
                         handler: function () {
                             openImpersonate(field(record(), 'id'));
                         }
@@ -142,7 +136,7 @@ Ext.onReady(function () {
         if (template) {
             toolbar.add({
                 xtype: 'button',
-                text: withIcon('eye', lang.view || 'View on the site'),
+                text: lang.view || 'View on the site',
                 handler: function () { openUserPage(userId, cfg.username); }
             });
         }
@@ -150,7 +144,7 @@ Ext.onReady(function () {
         if (impersonate) {
             toolbar.add({
                 xtype: 'button',
-                text: withIcon('sign-in', lang.impersonate || 'Log in as user'),
+                text: lang.impersonate || 'Log in as user',
                 cls: 'primary-button',
                 handler: function () { openImpersonate(userId); }
             });
