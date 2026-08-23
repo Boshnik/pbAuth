@@ -151,4 +151,7 @@ return [
     'social_accounts_title' => 'Прив’язані мережі',
     'social_link' => 'Прив’язати',
     'social_unlink' => 'Відв’язати',
+
+    // single session
+    'session_taken_over' => 'Вас вийшло з акаунта: під цим логіном увійшли з іншого пристрою.',
 ];

@@ -5,6 +5,10 @@
     <h3 class="text-center">{lang 'auth.form_login_title'}</h3>
     <p class="text-center px-5">{lang 'auth.form_login_subtitle'}</p>
 
+    {if $kicked_message}
+        <p class="form-message text-center text-warning">{$kicked_message}</p>
+    {/if}
+
     {if $success_message}
         <p class="form-message text-center text-success" pb-message>{$success_message}</p>
     {elseif $error_message}

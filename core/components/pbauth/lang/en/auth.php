@@ -151,4 +151,7 @@ return [
     'social_accounts_title' => 'Linked networks',
     'social_link' => 'Link',
     'social_unlink' => 'Unlink',
+
+    // single session
+    'session_taken_over' => 'You have been signed out: the same account was used to sign in elsewhere.',
 ];

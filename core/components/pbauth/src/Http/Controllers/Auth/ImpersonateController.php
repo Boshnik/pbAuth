@@ -5,6 +5,7 @@ namespace Boshnik\PbAuth\Http\Controllers\Auth;
 use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PbAuth\Events\Dispatcher;
 use Boshnik\PbAuth\Support\Config;
+use Boshnik\PbAuth\Support\SingleSession;
 
 /**
  * «Авторизоваться на сайте» из менеджера MODX.
@@ -43,6 +44,10 @@ class ImpersonateController extends AuthController
         if (!$target->get('active') || ($profile && $profile->get('blocked'))) {
             abort(403, lang('auth.impersonate_blocked'));
         }
+
+        // Помечаем до входа: иначе claim() перепишет закреплённую сессию на
+        // менеджерскую и настоящего пользователя выкинет.
+        SingleSession::exempt();
 
         $this->authenticate($target);
 

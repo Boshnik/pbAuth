@@ -151,4 +151,7 @@ return [
     'social_accounts_title' => 'Привязанные сети',
     'social_link' => 'Привязать',
     'social_unlink' => 'Отвязать',
+
+    // single session
+    'session_taken_over' => 'Вы вышли из аккаунта: под этим логином вошли с другого устройства.',
 ];

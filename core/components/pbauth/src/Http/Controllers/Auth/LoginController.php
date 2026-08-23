@@ -5,6 +5,7 @@ namespace Boshnik\PbAuth\Http\Controllers\Auth;
 use Boshnik\PageBlocks\Http\Request;
 use Boshnik\PbAuth\Events\Dispatcher;
 use Boshnik\PbAuth\Support\Config;
+use Boshnik\PbAuth\Support\SingleSession;
 use Boshnik\PbAuth\Support\TwoFactor;
 
 class LoginController extends AuthController
@@ -49,6 +50,10 @@ class LoginController extends AuthController
         if ($response->isError()) {
             return $this->getProcessorError($response);
         }
+
+        // Обычный вход идёт через процессор MODX, а он про наш учёт сессий не
+        // знает — закрепляем сами.
+        SingleSession::claim($user);
 
         Dispatcher::fire(Dispatcher::AFTER_LOGIN, ['user' => $user]);
 

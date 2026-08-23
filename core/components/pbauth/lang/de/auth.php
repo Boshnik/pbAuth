@@ -151,4 +151,7 @@ return [
     'social_accounts_title' => 'Verknüpfte Netzwerke',
     'social_link' => 'Verknüpfen',
     'social_unlink' => 'Trennen',
+
+    // single session
+    'session_taken_over' => 'Sie wurden abgemeldet: dasselbe Konto wurde anderswo angemeldet.',
 ];

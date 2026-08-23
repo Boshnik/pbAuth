@@ -6,6 +6,7 @@ use Boshnik\PbAuth\Events\Dispatcher;
 use Boshnik\PageBlocks\Support\Mail;
 use Boshnik\PbAuth\Social\DriverRegistry;
 use Boshnik\PbAuth\Support\Config;
+use Boshnik\PbAuth\Support\SingleSession;
 use PageBlocks\App\Http\Controllers\Controller;
 
 class AuthController extends Controller
@@ -49,6 +50,11 @@ class AuthController extends Controller
         // Меню профиля должно знать, показывать ли раздел второго фактора, а
         // рисуется оно в шаблоне-обёртке любой страницы профиля.
         $data['two_factor_available'] = (bool)Config::get('two_factor_enabled', true);
+
+        if (!empty($_SESSION[SingleSession::KICKED])) {
+            $data['kicked_message'] = lang('auth.session_taken_over');
+            unset($_SESSION[SingleSession::KICKED]);
+        }
 
         // Провайдер возвращает человека переходом по ссылке, поэтому сообщение
         // об исходе везём через сессию и показываем на первой же странице.
@@ -133,6 +139,8 @@ class AuthController extends Controller
         foreach ($this->getContexts() as $context) {
             $user->addSessionContext($context);
         }
+
+        SingleSession::claim($user);
     }
 
     public function verifyEmail(string $token)

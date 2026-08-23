@@ -26,6 +26,9 @@
  - a page to resend the confirmation link, /resend-verification, linked from the
    login form. Answers the same way whether the address is known or not, so it
    cannot be used to probe which emails are registered; rate limited per address
+ - `'single_session' => true` limits an account to one open session: signing in
+   closes whatever session was open before. The manager and the "log in as user"
+   button are exempt
  - a "view on the site" button next to it, opening the user's public page rather
    than signing in as them. The address is a template in the `pbauth_user_page`
    system setting ({id}, {username}); empty hides the button

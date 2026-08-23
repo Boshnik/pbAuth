@@ -17,6 +17,7 @@ pbAuth – a powerful authentication, registration, and user profile management 
  - "Log in as user" and "View on the site" buttons on users in the manager
  - Resending the confirmation link when it was lost or never delivered
  - Two-factor confirmation at login (TOTP), with backup codes
+ - Optional one-session-per-account: a new sign-in closes the previous one
  - Sign in through Google, Yandex, Mail.ru, GitHub, Facebook and Telegram
 
 ### Quick Start
