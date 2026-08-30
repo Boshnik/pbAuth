@@ -24,7 +24,7 @@ class LoginController extends AuthController
         $user = $this->modx->getObject($this->userClassKey, ['username' => $request->username]);
         if (!$user) {
             $profile = $this->modx->getObject($this->profileClassKey, ['email' => $request->username])
-                ?: $this->modx->getObject($this->profileClassKey, ['phone' => $request->username]);
+                ?: $this->findByPhone($request->username);
 
             if (!$profile || !$user = $profile->getOne('User')) {
                 return response()->error('', [
@@ -58,6 +58,25 @@ class LoginController extends AuthController
         Dispatcher::fire(Dispatcher::AFTER_LOGIN, ['user' => $user]);
 
         return response()->success('', $this->loginRedirect($request));
+    }
+
+    /**
+     * Телефоны в базе лежат одними цифрами, а вводят их как угодно: со знаком
+     * плюс, пробелами, скобками. Сравниваем нормализованное с нормализованным,
+     * иначе «+373 60 41 34 13» не находит собственную запись `37360413413`.
+     *
+     * Короткий ввод по телефону не ищем вовсе: среди легаси-записей есть обрывки
+     * вроде `998` и одиночные пробелы, и по ним нашёлся бы чужой профиль.
+     */
+    protected function findByPhone(?string $value)
+    {
+        $digits = preg_replace('/\D+/', '', (string)$value);
+
+        if (strlen((string)$digits) < 7) {
+            return null;
+        }
+
+        return $this->modx->getObject($this->profileClassKey, ['phone' => $digits]);
     }
 
     /**
