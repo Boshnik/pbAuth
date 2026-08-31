@@ -17,7 +17,8 @@ return [
     'install' => true,
     // Which elements should be updated on package upgrade
     'update' => [
-        'symlinks' => true
+        'settings' => false,
+        'symlinks' => true,
     ],
     // Which elements should be static by default
     'static' => [],
