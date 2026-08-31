@@ -368,7 +368,7 @@ return [
 | `confirmed` | рядом должно быть поле `имя_confirmation` с тем же значением |
 | `unique:users` | такого значения ещё нет в таблице `modx_users` |
 | `exists:user_attributes,email` | такое значение в таблице есть |
-| `file`, `image`, `mimes:image/png` | загружаемый файл |
+| `file`, `image`, `mimes:jpg,png` | загружаемый файл |
 
 Правила пишутся через `|`: `'required|string|min:3|max:30'`.
 

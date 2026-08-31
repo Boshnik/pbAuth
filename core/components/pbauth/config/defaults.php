@@ -88,7 +88,7 @@ return [
             'fullname' => 'nullable|string',
             'phone' => 'nullable|string',
             'photo' => 'nullable|string',
-            'newphoto' => 'nullable|file|image|mimes:image/jpg,image/jpeg,image/png|max:2048|exclude',
+            'newphoto' => 'nullable|file|image|mimes:jpg,jpeg,png|max:2048|exclude',
         ],
     ],
 
