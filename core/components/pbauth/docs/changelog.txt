@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0-pl] - 2026-08-02
+## [1.1.0-pl] - 2026-09-18
 
 ### Changed
  - routes and controllers now live in the component instead of being copied into
@@ -42,6 +42,9 @@
    registered in `App/config/pbauth.php`; the matching MODX system event is
    invoked as well
  - `?redirect=` on the login form, restricted to paths inside the site
+ - a page can be given its own wrapper template: a `views` key named after the
+   action wins over the section one, for sites whose profile template draws
+   itself and never substitutes `$form`
 
 ### Fixed
  - uninstall deleted every file named `auth.php` and every `auth`/`Auth` folder
@@ -68,6 +71,10 @@
    leaves its own routes unregistered, so nothing is duplicated. Delete the file
    (and `App/Http/Controllers/Auth/`) once you have moved your changes into
    `App/config/pbauth.php`
+ - the package attaches `OnManagerPageBeforeRender` and `OnHandleRequest` to its
+   own `pbAuth` plugin. Deploying by file instead means creating the plugin by
+   hand from `core/components/pbauth/plugins/pbauth.php` and attaching both,
+   `OnHandleRequest` with priority -10
  - requires PageBlocks 3.0 or higher
 
 ## [1.0.3-pl] - 2025-10-11
