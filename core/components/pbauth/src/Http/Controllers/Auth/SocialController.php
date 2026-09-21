@@ -38,7 +38,7 @@ class SocialController extends AuthController
             'provider' => $provider,
             // Привязка к уже открытому аккаунту или вход — от этого зависит,
             // что делать с найденным профилем.
-            'intent' => $this->modx->user && $this->modx->user->id ? 'link' : 'login',
+            'intent' => $this->currentUser() ? 'link' : 'login',
             'redirect' => $this->safeRedirect($request->get('redirect', '')),
             'expires' => time() + 600,
         ];
@@ -95,7 +95,7 @@ class SocialController extends AuthController
      */
     protected function resolve(string $provider, SocialUser $socialUser, string $intent, string $redirect)
     {
-        $current = $this->modx->user && $this->modx->user->id ? $this->modx->user : null;
+        $current = $this->currentUser();
         $account = PbaSocialAccount::findAccount($provider, $socialUser->id);
 
         // Аккаунт уже за кем-то закреплён.
@@ -323,6 +323,25 @@ class SocialController extends AuthController
         Dispatcher::fire(Dispatcher::AFTER_LOGIN, ['user' => $user, 'social' => true]);
 
         return redirect($redirect ?: $this->redirectTo('login'));
+    }
+
+    /**
+     * Вошедший на сайт — и только он.
+     *
+     * `$modx->user` для этого не годится: getUser() во фронтовом контексте, не
+     * найдя сессии сайта, подставляет пользователя из `mgr` (modX.php: «если не
+     * mgr и никого нет — взять mgr»). Из-за этого администратор, открывший
+     * менеджер, считался на фронте вошедшим, и вход соцсетью молча превращался в
+     * привязку сети к его аккаунту: страница перезагружалась, войти было нельзя.
+     */
+    protected function currentUser()
+    {
+        $user = $this->modx->user;
+        if (!$user || empty($user->id)) {
+            return null;
+        }
+
+        return $user->isAuthenticated($this->modx->context->key ?: 'web') ? $user : null;
     }
 
     protected function driver(string $provider)
