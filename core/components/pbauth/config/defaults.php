@@ -43,7 +43,10 @@ return [
         ],
         'register' => [
             'honeypot' => 'empty|exclude',
-            'username' => 'required|alpha_dash:ascii|min:3|max:30|unique:users',
+            // `string` обязателен: без него min и max у логина из одних цифр
+            // сравнивают величину, а не длину, и «2385672156» не проходит
+            // max:30 как число два с лишним миллиарда.
+            'username' => 'required|string|alpha_dash:ascii|min:3|max:30|unique:users',
             'email' => 'required|email|unique:user_attributes',
             'password' => 'required|string|min:8|confirmed',
         ],
