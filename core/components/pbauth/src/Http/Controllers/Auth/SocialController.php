@@ -110,6 +110,7 @@ class SocialController extends AuthController
             }
 
             SocialAccounts::link((int)$user->id, $provider, $socialUser);
+            $this->confirmEmail($user, $socialUser);
 
             return $current ? $this->done('auth.social_linked', $redirect) : $this->signIn($user, $redirect);
         }
@@ -133,6 +134,7 @@ class SocialController extends AuthController
                 }
 
                 SocialAccounts::link((int)$user->id, $provider, $socialUser);
+                $this->confirmEmail($user, $socialUser);
                 Dispatcher::fire(Dispatcher::SOCIAL_LINKED, ['user' => $user, 'provider' => $provider]);
 
                 return $this->signIn($user, $redirect);
@@ -292,6 +294,35 @@ class SocialController extends AuthController
         }
 
         return $this->signIn($user, $redirect);
+    }
+
+    /**
+     * Провайдер поручился за адрес — значит почта подтверждена.
+     *
+     * Новому аккаунту это выставляет `register()`, а вот тому, кто завёлся
+     * формой и только потом пришёл через соцсеть, `active` не поднимал никто:
+     * он входит на сайт и при этом навсегда остаётся в списке неподтверждённых.
+     * Ссылку из письма такой человек уже не откроет — она ему не нужна.
+     *
+     * Адрес сверяем: `emailVerified` относится к почте у провайдера, а на сайте
+     * у аккаунта может быть записана другая — подтверждать тогда нечего. Токен
+     * гасим заодно: письмо со ссылкой после этого недействительно.
+     */
+    protected function confirmEmail($user, SocialUser $socialUser): void
+    {
+        if ($user->get('active') || !$socialUser->emailVerified || !$socialUser->hasEmail()) {
+            return;
+        }
+
+        $profile = $user->getOne('Profile');
+        if (!$profile || strcasecmp((string)$profile->get('email'), $socialUser->email) !== 0) {
+            return;
+        }
+
+        $user->set('active', true);
+        $user->set('remote_key', null);
+        $user->set('remote_data', null);
+        $user->save();
     }
 
     protected function joinGroups($user): void
