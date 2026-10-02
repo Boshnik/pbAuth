@@ -1,5 +1,35 @@
 # Changelog
 
+## [unreleased]
+
+### Fixed
+ - **a failed install no longer reports success.** The migration resolver called
+   `shell_exec`, which does not return an exit code at all: a failed migration, a
+   `php` missing from PATH and an `exec()` disabled by the host all arrived at the
+   same place as a successful run. The output went to the log at INFO level, where
+   nobody looked for it, and the resolver returned `true` regardless. It now uses
+   `exec` and checks the exit code, and a failure is logged as ERROR — the package
+   installer console prints that in red. What the silence cost here is social
+   sign-in: without `pba_social_accounts` the link fails on the first request, and
+   it looks like "the site won't let me in through Google" rather than a migration
+   that never ran
+ - **the CLI binary is no longer a bare `php`.** Under php-fpm `PHP_BINARY` points
+   at fpm itself, which cannot run a CLI script, and `php` is not in PATH on every
+   host: the resolver now looks next to `PHP_BINDIR` first and only then falls back
+   to PATH
+ - **`src/phinx.php` with no `config.core.php` is no longer read as a successful
+   run.** `die("string")` exits with code 0, so phinx reported "applied" without
+   ever starting. It now writes to STDERR and `exit(1)`
+
+### Notes
+ - the resolver still cannot fail the install, and that is not worth trying to
+   fix: `xPDOVehicle::resolve()` overwrites its result with each following
+   resolver, and `xPDOObjectVehicle::install()` returns `$saved || $exists`
+   without looking at resolvers at all. The ERROR in the log is the only signal
+   that reaches a person. PageBlocks and pbShop also show a manager banner for
+   unapplied migrations; pbAuth has no manager pages of its own, so there is
+   nowhere to put one here
+
 ## [1.1.0-pl] - 2026-09-18
 
 ### Changed
