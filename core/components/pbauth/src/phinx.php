@@ -1,8 +1,11 @@
 <?php
 
 $configPath = dirname(__DIR__, 4) . '/config.core.php';
+// Не `die()`: со строкой он завершает процесс с кодом 0, и резолвер установки,
+// который смотрит на код выхода, принял бы это за успешный прогон миграций.
 if (!file_exists($configPath)) {
-    die("config.core.php not found at: {$configPath}\n");
+    fwrite(STDERR, "config.core.php not found at: {$configPath}\n");
+    exit(1);
 }
 
 require_once $configPath;
