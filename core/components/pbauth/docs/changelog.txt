@@ -1,8 +1,34 @@
 # Changelog
 
-## [unreleased]
+## [1.1.1-pl] - 2026-10-03
+
+A fix-only release. Three of the six were silent: the account stayed
+unconfirmed, the install reported success, the migration never ran — and nothing
+on screen said so.
 
 ### Fixed
+ - **a manager session no longer counts as a signed-in visitor on social login.**
+   In a front-end context `modX::getUser()`, finding no site session, falls back
+   to the user from `mgr`. So for an administrator with the manager open, social
+   sign-in took the "link the network to the current account" branch: the network
+   was attached to the administrator's own account and no session was opened — the
+   page just reloaded, with nothing to click and nothing in the log. Being signed
+   in is now decided by `isAuthenticated()` of the current context, the same way
+   the `auth` and `guest` middleware decide it
+ - **an account joined through a social provider is now activated.** `register()`
+   set `active` for a brand-new account, but nobody set it for someone who had
+   signed up through the form earlier and only later arrived through a social
+   network: `resolve()` found them by the verified address, linked the network and
+   opened a session. The person went on using the site and stayed on the
+   unconfirmed list forever. The address is compared before activating —
+   `email_verified` refers to the address held by the provider, and when it
+   differs from the profile there is nothing to confirm — and the one-time token
+   is cleared, so a confirmation letter already sent stops working
+ - **the login rule needs `string`, or length is measured as a number.** Without
+   it `min` and `max` compare the magnitude of a numeric string: the username
+   `2385672156`, taken from the address `2385672156@qq.com`, failed `max:30` as a
+   number over two billion. On a form where the site fills the username in, that
+   is a rejection on a field the person cannot see
  - **a failed install no longer reports success.** The migration resolver called
    `shell_exec`, which does not return an exit code at all: a failed migration, a
    `php` missing from PATH and an `exec()` disabled by the host all arrived at the
@@ -20,6 +46,14 @@
  - **`src/phinx.php` with no `config.core.php` is no longer read as a successful
    run.** `die("string")` exits with code 0, so phinx reported "applied" without
    ever starting. It now writes to STDERR and `exit(1)`
+
+### Upgrading
+ - nothing to do: no schema change, no settings, no files in `core/App/` touched
+ - accounts already stuck as inactive heal themselves — the "this provider
+   account is already linked" branch confirms the address too, so the next social
+   sign-in activates them. There is no one-off sweep, so an account whose owner
+   never comes back through the network stays on the unconfirmed list and has to
+   be activated by hand
 
 ### Notes
  - the resolver still cannot fail the install, and that is not worth trying to
