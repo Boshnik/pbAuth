@@ -2,144 +2,80 @@
 
 ## [1.1.1-pl] - 2026-10-03
 
-A fix-only release. Three of the six were silent: the account stayed
-unconfirmed, the install reported success, the migration never ran — and nothing
-on screen said so.
-
 ### Fixed
- - **a manager session no longer counts as a signed-in visitor on social login.**
-   In a front-end context `modX::getUser()`, finding no site session, falls back
-   to the user from `mgr`. So for an administrator with the manager open, social
-   sign-in took the "link the network to the current account" branch: the network
-   was attached to the administrator's own account and no session was opened — the
-   page just reloaded, with nothing to click and nothing in the log. Being signed
-   in is now decided by `isAuthenticated()` of the current context, the same way
-   the `auth` and `guest` middleware decide it
- - **an account joined through a social provider is now activated.** `register()`
-   set `active` for a brand-new account, but nobody set it for someone who had
-   signed up through the form earlier and only later arrived through a social
-   network: `resolve()` found them by the verified address, linked the network and
-   opened a session. The person went on using the site and stayed on the
-   unconfirmed list forever. The address is compared before activating —
-   `email_verified` refers to the address held by the provider, and when it
-   differs from the profile there is nothing to confirm — and the one-time token
-   is cleared, so a confirmation letter already sent stops working
- - **the login rule needs `string`, or length is measured as a number.** Without
-   it `min` and `max` compare the magnitude of a numeric string: the username
-   `2385672156`, taken from the address `2385672156@qq.com`, failed `max:30` as a
-   number over two billion. On a form where the site fills the username in, that
-   is a rejection on a field the person cannot see
- - **a failed install no longer reports success.** The migration resolver called
-   `shell_exec`, which does not return an exit code at all: a failed migration, a
-   `php` missing from PATH and an `exec()` disabled by the host all arrived at the
-   same place as a successful run. The output went to the log at INFO level, where
-   nobody looked for it, and the resolver returned `true` regardless. It now uses
-   `exec` and checks the exit code, and a failure is logged as ERROR — the package
-   installer console prints that in red. What the silence cost here is social
-   sign-in: without `pba_social_accounts` the link fails on the first request, and
-   it looks like "the site won't let me in through Google" rather than a migration
-   that never ran
- - **the CLI binary is no longer a bare `php`.** Under php-fpm `PHP_BINARY` points
-   at fpm itself, which cannot run a CLI script, and `php` is not in PATH on every
-   host: the resolver now looks next to `PHP_BINDIR` first and only then falls back
-   to PATH
- - **`src/phinx.php` with no `config.core.php` is no longer read as a successful
-   run.** `die("string")` exits with code 0, so phinx reported "applied" without
-   ever starting. It now writes to STDERR and `exit(1)`
+ - social sign-in treated an open manager session as a signed-in visitor: the
+   network was linked to the administrator instead of signing the person in
+ - an account joined through a social provider by a verified address stayed inactive
+ - `string` was missing from the `username` rule, so length was measured as a number
+ - a failed migration reported success — the resolver now checks the exit code
+ - the CLI binary is looked up next to `PHP_BINDIR`, not only in PATH
+ - `src/phinx.php` without `config.core.php` exited with code 0
 
 ### Upgrading
- - nothing to do: no schema change, no settings, no files in `core/App/` touched
- - accounts already stuck as inactive heal themselves — the "this provider
-   account is already linked" branch confirms the address too, so the next social
-   sign-in activates them. There is no one-off sweep, so an account whose owner
-   never comes back through the network stays on the unconfirmed list and has to
-   be activated by hand
-
-### Notes
- - the resolver still cannot fail the install, and that is not worth trying to
-   fix: `xPDOVehicle::resolve()` overwrites its result with each following
-   resolver, and `xPDOObjectVehicle::install()` returns `$saved || $exists`
-   without looking at resolvers at all. The ERROR in the log is the only signal
-   that reaches a person. PageBlocks and pbShop also show a manager banner for
-   unapplied migrations; pbAuth has no manager pages of its own, so there is
-   nowhere to put one here
+ - nothing to do
+ - accounts stuck inactive are activated on the owner's next social sign-in
+ - a green installer console does not mean migrations ran — read the log
 
 ## [1.1.0-pl] - 2026-09-18
 
 ### Changed
- - routes and controllers now live in the component instead of being copied into
-   `core/App/`, so fixes reach existing sites on upgrade. Routes are registered
-   from `bootstrap.php` via `Route::addRoutesPath()`
- - what the site used to change by editing the copied controllers is now
-   configuration: templates, form chunks, validation rules, redirects, user
-   groups and controller class overrides live in `core/App/config/pbauth.php`
+ - routes and controllers moved into the component, registered from
+   `bootstrap.php` — fixes now reach existing sites on upgrade
+ - templates, form chunks, validation rules, redirects, user groups and
+   controller overrides are configured in `core/App/config/pbauth.php`
    (sample in `docs/pbauth.config.example.php`)
- - install no longer overwrites files already present in `core/App/`; it behaves
-   like upgrade and only fills in what is missing
- - `lexicon/` is no longer copied into `core/App/` — it belongs to the manager
+ - install no longer overwrites files already present in `core/App/`
+ - `lexicon/` is no longer copied into `core/App/`
 
 ### Added
  - sign in through Google, Yandex, Mail.ru, GitHub, Facebook and Telegram. An
-   existing account is only joined when the provider vouches that the address
-   belongs to the person; otherwise the site asks for a password login and a
-   link from the profile. Adds the component's first table, pba_social_accounts
- - two-factor confirmation at login (TOTP, RFC 6238) — every user turns it on for
-   themselves under the profile. Works with any authenticator app; backup codes
-   for a lost phone; the secret lives in the profile's `extended`, no new table.
-   Turn the whole thing off with `'two_factor_enabled' => false`
- - a page to resend the confirmation link, /resend-verification, linked from the
-   login form. Answers the same way whether the address is known or not, so it
-   cannot be used to probe which emails are registered; rate limited per address
- - `'single_session' => true` limits an account to one open session: signing in
-   closes whatever session was open before. The manager and the "log in as user"
-   button are exempt
- - a "view on the site" button next to it, opening the user's public page rather
-   than signing in as them. The address is a template in the `pbauth_user_page`
-   system setting ({id}, {username}); empty hides the button
- - "log in as user" from the manager: a row-menu action in the users grid and a
-   button on the user page, both opening the site under that account. Requires a
-   sudo manager session; turn it off with `'impersonate_enabled' => false`
- - events the site hooks into without touching component code:
-   `pbAuthUserSaving`, `pbAuthAfterRegister`, `pbAuthAfterLogin`,
+   existing account is only joined when the provider vouches for the address.
+   Adds the component's first table, `pba_social_accounts`
+ - two-factor confirmation at login (TOTP, RFC 6238), turned on per user, with
+   backup codes. Off site-wide with `'two_factor_enabled' => false`
+ - `/resend-verification` — resend the confirmation link. Answers the same way
+   for a known and an unknown address; rate limited per address
+ - `'single_session' => true` — a new sign-in closes the previous session. The
+   manager and "log in as user" are exempt
+ - "log in as user" from the manager: row-menu action and a button on the user
+   page. Requires a sudo session; off with `'impersonate_enabled' => false`
+ - "view on the site" button, address from the `pbauth_user_page` setting
+   (`{id}`, `{username}`); empty hides the button
+ - events: `pbAuthUserSaving`, `pbAuthAfterRegister`, `pbAuthAfterLogin`,
    `pbAuthAfterLogout`, `pbAuthAfterProfileUpdate`, `pbAuthAfterVerifyEmail`,
    `pbAuthAfterResetPassword`, `pbAuthAfterChangePassword`. Listeners are
-   registered in `App/config/pbauth.php`; the matching MODX system event is
-   invoked as well
+   registered in `App/config/pbauth.php`
  - `?redirect=` on the login form, restricted to paths inside the site
  - a page can be given its own wrapper template: a `views` key named after the
-   action wins over the section one, for sites whose profile template draws
-   itself and never substitutes `$form`
+   action wins over the section one
 
 ### Fixed
- - uninstall deleted every file named `auth.php` and every `auth`/`Auth` folder
-   under `core/App/`, which on a real site also meant the site's own routes,
-   lexicons and controllers. It now removes only what the installer recorded in
-   `core/App/.pbauth-installed.json` and only while the file is unchanged
- - the forgot-password form answered differently for a known and an unknown
-   address, so it could be used to enumerate registered emails. It now replies
-   the same way either way, and is rate limited per address
- - `unique:modUser` / `exists:modUserProfile` never matched anything: the
-   validator queries a table, not a MODX class. Now `users` / `user_attributes`,
-   so duplicate usernames and emails are actually rejected
+ - uninstall deleted every `auth.php` and every `auth`/`Auth` folder under
+   `core/App/`, including the site's own routes, lexicons and controllers. It
+   now removes only what the installer recorded in
+   `core/App/.pbauth-installed.json`, and only while the file is unchanged
+ - the forgot-password form answered differently for known and unknown
+   addresses, so it could be used to enumerate registered emails
+ - `unique:modUser` / `exists:modUserProfile` never matched anything — the
+   validator queries a table, not a MODX class. Now `users` / `user_attributes`
  - the "3 registrations per IP" limit counted on `modUser.ip`, a column MODX 3
    does not have. Counted in the cache now
- - `AuthController::$modxVersion` was never set, so the MODX 2 processor paths
-   were used on MODX 3
+ - `AuthController::$modxVersion` was never set, so MODX 2 processor paths were
+   used on MODX 3
 
 ### Upgrading
- - the package applies the migration itself; on a host deployed by file, run
+ - requires PageBlocks 3.0 or higher
+ - the package applies the migration itself; deployed by file, run
    `php core/components/pageblocks/vendor/bin/phinx migrate
    --configuration=core/components/pbauth/src/phinx.php --environment=production`
- - the upgrade deletes `App/routes/auth.php` when it is still byte-identical to
-   the shipped one. If you edited it, it stays and keeps working — pbAuth then
-   leaves its own routes unregistered, so nothing is duplicated. Delete the file
-   (and `App/Http/Controllers/Auth/`) once you have moved your changes into
+ - the upgrade deletes `App/routes/auth.php` while it is byte-identical to the
+   shipped one. If you edited it, it stays and keeps working and pbAuth
+   registers no routes of its own — delete it, and
+   `App/Http/Controllers/Auth/`, once your changes are in
    `App/config/pbauth.php`
- - the package attaches `OnManagerPageBeforeRender` and `OnHandleRequest` to its
-   own `pbAuth` plugin. Deploying by file instead means creating the plugin by
-   hand from `core/components/pbauth/plugins/pbauth.php` and attaching both,
-   `OnHandleRequest` with priority -10
- - requires PageBlocks 3.0 or higher
+ - deployed by file, create the `pbAuth` plugin from
+   `core/components/pbauth/plugins/pbauth.php` and attach
+   `OnManagerPageBeforeRender` and `OnHandleRequest` (priority -10)
 
 ## [1.0.3-pl] - 2025-10-11
 
