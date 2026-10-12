@@ -2,24 +2,24 @@
 <body>
 {switch $modx->config.cultureKey}
 {case 'ru'}
-    <p>Здравствуйте, {$username}!</p>
+    <p>Здравствуйте, {$username|escape}!</p>
     <p>Пожалуйста, подтвердите ваш email, перейдя по ссылке:</p>
-    <p><a href="{$verifyUrl}">{$verifyUrl}</a></p>
+    <p><a href="{$verifyUrl|escape}">{$verifyUrl|escape}</a></p>
     <p>Если вы не регистрировались на нашем сайте, просто проигнорируйте это письмо.</p>
 {case 'de'}
-    <p>Hallo, {$username}!</p>
+    <p>Hallo, {$username|escape}!</p>
     <p>Bitte bestätigen Sie Ihre E-Mail-Adresse, indem Sie auf den folgenden Link klicken:</p>
-    <p><a href="{$verifyUrl}">{$verifyUrl}</a></p>
+    <p><a href="{$verifyUrl|escape}">{$verifyUrl|escape}</a></p>
     <p>Wenn Sie sich nicht auf unserer Website registriert haben, ignorieren Sie bitte diese E-Mail.</p>
 {case 'uk'}
-    <p>Вітаємо, {$username}!</p>
+    <p>Вітаємо, {$username|escape}!</p>
     <p>Будь ласка, підтвердьте свою електронну адресу, перейшовши за посиланням:</p>
-    <p><a href="{$verifyUrl}">{$verifyUrl}</a></p>
+    <p><a href="{$verifyUrl|escape}">{$verifyUrl|escape}</a></p>
     <p>Якщо ви не реєструвалися на нашому сайті, просто проігноруйте цей лист.</p>
 {default}
-    <p>Hello, {$username}!</p>
+    <p>Hello, {$username|escape}!</p>
     <p>Please confirm your email address by clicking the link below:</p>
-    <p><a href="{$verifyUrl}">{$verifyUrl}</a></p>
+    <p><a href="{$verifyUrl|escape}">{$verifyUrl|escape}</a></p>
     <p>If you did not register on our website, please ignore this email.</p>
 {/switch}
 </body>

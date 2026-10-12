@@ -6,29 +6,29 @@
     <p class="text-center px-5">{lang 'auth.form_register_subtitle'}</p>
 
     {if $success_message}
-        <p class="form-message text-center text-success" pb-message>{$success_message}</p>
+        <p class="form-message text-center text-success" pb-message>{$success_message|escape}</p>
     {elseif $error_message}
-        <p class="form-message text-center text-error text-danger" pb-message>{$error_message}</p>
+        <p class="form-message text-center text-error text-danger" pb-message>{$error_message|escape}</p>
     {else}
         <p class="form-message text-center d-none" pb-message></p>
     {/if}
 
     <div class="form-group mb-3">
         <label class="mb-2" for="username">{lang 'auth.field_username'}</label>
-        <input type="text" name="username" id="username" class="form-control{if $errors.username} is-invalid{/if}" value="{$old_input.username}" required>
-        <span class="invalid-feedback" data-error="username">{$errors.username}</span>
+        <input type="text" name="username" id="username" class="form-control{if $errors.username} is-invalid{/if}" value="{$old_input.username|escape}" required>
+        <span class="invalid-feedback" data-error="username">{$errors.username|escape}</span>
     </div>
 
     <div class="form-group mb-3">
         <label class="mb-2" for="email">{lang 'auth.field_email'}</label>
-        <input type="text" name="email" id="email" class="form-control{if $errors.email} is-invalid{/if}" value="{$old_input.email}" required>
-        <span class="invalid-feedback" data-error="email">{$errors.email}</span>
+        <input type="text" name="email" id="email" class="form-control{if $errors.email} is-invalid{/if}" value="{$old_input.email|escape}" required>
+        <span class="invalid-feedback" data-error="email">{$errors.email|escape}</span>
     </div>
 
     <div class="form-group mb-3">
         <label class="mb-2" for="password">{lang 'auth.field_password'}</label>
         <input type="password" name="password" id="password" class="form-control{if $errors.password} is-invalid{/if}" required>
-        <span class="invalid-feedback" data-error="password">{$errors.password}</span>
+        <span class="invalid-feedback" data-error="password">{$errors.password|escape}</span>
     </div>
 
     <div class="form-group mb-3">

@@ -5,9 +5,9 @@
     <p class="text-center">{lang 'auth.form_two_factor_subtitle'}</p>
 
     {if $success_message}
-        <p class="form-message text-center text-success" pb-message>{$success_message}</p>
+        <p class="form-message text-center text-success" pb-message>{$success_message|escape}</p>
     {elseif $error_message}
-        <p class="form-message text-center text-error text-danger" pb-message>{$error_message}</p>
+        <p class="form-message text-center text-error text-danger" pb-message>{$error_message|escape}</p>
     {else}
         <p class="form-message text-center d-none" pb-message></p>
     {/if}
@@ -17,7 +17,7 @@
         <input type="text" name="code" id="code" class="form-control text-center{if $errors.code} is-invalid{/if}"
                inputmode="numeric" autocomplete="one-time-code" autofocus
                placeholder="000000" maxlength="12" required>
-        <span class="invalid-feedback" data-error="code">{$errors.code}</span>
+        <span class="invalid-feedback" data-error="code">{$errors.code|escape}</span>
     </div>
 
     <button type="submit" class="btn btn-dark w-100">

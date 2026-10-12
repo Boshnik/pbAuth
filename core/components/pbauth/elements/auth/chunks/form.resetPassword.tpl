@@ -1,15 +1,15 @@
 <form class="border rounded-4 p-5" action="{route 'resetPassword'}" method="post" pb-form>
     <input type="hidden" name="_token" value="{csrf_token}">
     <input type="hidden" name="honeypot" value="">
-    <input type="hidden" name="token" value="{$token}">
+    <input type="hidden" name="token" value="{$token|escape}">
 
     <h3 class="text-center">{lang 'auth.form_reset_password_title'}</h3>
     <p class="text-center px-5">{lang 'auth.form_reset_password_subtitle'}</p>
 
     {if $success_message}
-        <p class="form-message text-center text-success" pb-message>{$success_message}</p>
+        <p class="form-message text-center text-success" pb-message>{$success_message|escape}</p>
     {elseif $error_message}
-        <p class="form-message text-center text-error text-danger" pb-message>{$error_message}</p>
+        <p class="form-message text-center text-error text-danger" pb-message>{$error_message|escape}</p>
     {else}
         <p class="form-message text-center d-none" pb-message></p>
     {/if}
@@ -17,7 +17,7 @@
     <div class="form-group mb-3">
         <label class="mb-2" for="password">{lang 'auth.field_password'}</label>
         <input type="password" name="password" id="password" class="form-control{if $errors.password} is-invalid{/if}" required>
-        <span class="invalid-feedback" data-error="password">{$errors.password}</span>
+        <span class="invalid-feedback" data-error="password">{$errors.password|escape}</span>
     </div>
 
     <div class="form-group mb-3">
