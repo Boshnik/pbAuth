@@ -86,7 +86,22 @@ return [
             'email' => 'required|email|unique:user_attributes',
         ],
         'profile' => [
-            'username' => 'required|unique:users,username,:user_id',
+            // Запрет ровно на пять знаков разметки, а не белый список.
+            // Регистрация выше строже - там `alpha_dash:ascii`, - но правило
+            // профиля применяется и к именам, завёденным не через pbAuth:
+            // менеджером MODX, переносом, входом через соцсеть. Белый список
+            // отрезал бы их владельцам возможность сохранить свой профиль
+            // вообще, а кириллическое имя на русском сайте - обычное дело.
+            //
+            // Это второй рубеж, а не защита: XSS закрыт экранированием в
+            // шаблонах, см. tests/templates-escaping.php. Здесь - чтобы имя не
+            // ломало разметку там, где его напечатают без `|escape`: в чужом
+            // шаблоне сайта, в письме, в окне менеджера.
+            //
+            // Шаблон без `|`, `:` и `,` намеренно: правило разбирается
+            // explode('|'), затем explode(':', 2) и explode(',') - любой из
+            // этих знаков внутри развалил бы его на куски.
+            'username' => 'required|regex:^[^<>"\'&]+$|unique:users,username,:user_id',
             'email' => 'required|email|unique:user_attributes,email,:profile_id',
             'fullname' => 'nullable|string',
             'phone' => 'nullable|string',

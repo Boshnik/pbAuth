@@ -38,6 +38,7 @@ return [
 
     'field_login' => 'Логін або Email',
     'field_username' => 'Ім\'я',
+    'username_forbidden_chars' => 'Ім\'я не може містити знаки < > " \' &',
     'field_fullname' => 'Повне ім\'я',
     'field_password' => 'Пароль',
     'field_new_password' => 'Новий пароль',

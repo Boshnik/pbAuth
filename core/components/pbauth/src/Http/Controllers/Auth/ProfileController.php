@@ -39,10 +39,15 @@ class ProfileController extends AuthController
         $user = $this->modx->user;
         $profile = $user->getOne('Profile');
 
-        $validated = $request->validate(Config::rules('profile', [
-            ':user_id' => $user->id,
-            ':profile_id' => $profile->id,
-        ]));
+        // Своё сообщение на `regex`: общее у валидатора говорит «неверный
+        // формат», и набравший `Иван & Co` не узнает, что мешает амперсанд.
+        $validated = $request->validate(
+            Config::rules('profile', [
+                ':user_id' => $user->id,
+                ':profile_id' => $profile->id,
+            ]),
+            ['username.regex' => lang('auth.username_forbidden_chars')]
+        );
 
         if ($request->hasFile('newphoto')) {
             $path = strtr(Config::get('avatar_path'), [':user_id' => $user->id]);
