@@ -6,7 +6,11 @@
 <form action="{route 'updateProfile'}" method="post" class="border rounded-4 p-5" id="auth-profile" enctype="multipart/form-data" pb-form data-noclear>
     <input type="hidden" name="_token" value="{csrf_token}">
     <input type="hidden" name="honeypot" value="">
-    <input type="hidden" name="photo" value="{$photo|escape}">
+    {* Намерение, а не путь. Прежде сюда печатался текущий путь к аватару, и
+       «Удалить» его обнуляло, - значит путь можно было и подменить присланным,
+       а `fromArray()` писал присланное в профиль. Теперь поле отвечает на один
+       вопрос: удалить ли картинку. Что поставить вместо неё, решает сервер. *}
+    <input type="hidden" name="delete_photo" value="">
 
     <h3 class="text-center">{lang 'auth.form_profile_title'}</h3>
 
@@ -24,8 +28,10 @@
                 <img src="{$avatar|escape}" width="64" height="64" id="auth-photo" alt="{$modx->user->username|escape}">
             </div>
             <div class="d-flex flex-column mt-2">
+                {* Кнопка поднимает отметку удаления, а не стирает путь: путь в
+                   форме больше не ездит. *}
                 {if $photo}
-                    <button type="button" class="btn btn-sm btn-danger" onclick="document.querySelector('#auth-profile [name=photo]').value = '';document.querySelector('#auth-newphoto').style='';this.remove()">{lang 'auth.delete_photo'}</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="document.querySelector('#auth-profile [name=delete_photo]').value = '1';document.querySelector('#auth-newphoto').style='';this.remove()">{lang 'auth.delete_photo'}</button>
                 {/if}
                 <input type="file" name="newphoto" class="form-control" id="auth-newphoto"{if $photo} style="display:none"{/if}>
                 <span class="invalid-feedback" data-error="newphoto">{$errors.newphoto|escape}</span>
