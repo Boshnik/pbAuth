@@ -7,7 +7,10 @@
                 <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                     <span>{$provider.title|escape}</span>
                     {if $social_linked[$provider.key]}
-                        <form action="{route 'socialUnlink', ['provider' => $provider.key]}" method="post" pb-form class="m-0">
+                        {* `route(...)` вызовом, а не тегом `{route 'name', [...]}`:
+                           тегом адрес с параметрами не собирается вовсе - разбор
+                           спотыкается на запятой, и шаблон не компилируется. *}
+                        <form action="{route('socialUnlink', ['provider' => $provider.key])}" method="post" pb-form class="m-0">
                             <input type="hidden" name="_token" value="{csrf_token}">
                             <button type="submit" class="btn btn-sm btn-outline-danger">{lang 'auth.social_unlink'}</button>
                         </form>
