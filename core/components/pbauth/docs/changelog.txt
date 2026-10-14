@@ -1,6 +1,15 @@
 # Changelog
 
-## [1.1.1-pl] - 2026-10-03
+## [1.1.1-pl] - 2026-10-14
+
+### Security
+ - anything a visitor typed is now printed escaped: the login, registration,
+   profile, password and two-factor forms, the modal copies of them, the social
+   buttons and both account e-mails. Previously a name or an address carrying
+   markup was written into the page as markup
+ - the profile no longer takes the avatar address from the request — the server
+   decides where the file went, and the form only says whether to delete it
+ - the `username` rule rejects markup characters instead of storing them
 
 ### Fixed
  - social sign-in treated an open manager session as a signed-in visitor: the
@@ -10,11 +19,14 @@
  - a failed migration reported success — the resolver now checks the exit code
  - the CLI binary is looked up next to `PHP_BINDIR`, not only in PATH
  - `src/phinx.php` without `config.core.php` exited with code 0
+ - the linked-networks list is assembled once, and a test checks the assembly
 
 ### Upgrading
  - nothing to do
  - accounts stuck inactive are activated on the owner's next social sign-in
  - a green installer console does not mean migrations ran — read the log
+ - names already stored with markup stay as they are in the database, but are
+   printed escaped from this version on
 
 ## [1.1.0-pl] - 2026-09-18
 
