@@ -7,13 +7,13 @@
         <div class="d-flex flex-wrap gap-2 justify-content-center align-items-center">
             {foreach $social_providers as $provider}
                 {if $provider.redirect}
-                    <a class="btn btn-outline-dark btn-sm" href="{$provider.url}">{$provider.title}</a>
+                    <a class="btn btn-outline-dark btn-sm" href="{$provider.url|escape}">{$provider.title|escape}</a>
                 {elseif $provider.key == 'telegram'}
                     {* Кнопку рисует сам Telegram, своей вёрстки он не принимает. *}
                     <script async src="https://telegram.org/js/telegram-widget.js?22"
-                            data-telegram-login="{$provider.bot_name}"
+                            data-telegram-login="{$provider.bot_name|escape}"
                             data-size="medium"
-                            data-auth-url="{$provider.callback}"
+                            data-auth-url="{$provider.callback|escape}"
                             data-request-access="write"></script>
                 {/if}
             {/foreach}

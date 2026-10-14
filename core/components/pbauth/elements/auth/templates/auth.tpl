@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>{$title} | {'site_name'|config}</title>
+    <title>{$title|escape} | {'site_name'|config}</title>
     <meta charset="{'modx_charset'|config}">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
@@ -14,7 +14,7 @@
     {*ReCAPTCHA*}
     {set $captcha_public_key = 'pbauth_recaptcha_public_key'|config}
     {if $captcha_public_key}
-        <script src="https://www.google.com/recaptcha/api.js?render={$captcha_public_key}"></script>
+        <script src="https://www.google.com/recaptcha/api.js?render={$captcha_public_key|escape}"></script>
     {/if}
 </head>
 <body>

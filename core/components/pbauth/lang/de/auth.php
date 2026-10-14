@@ -38,6 +38,7 @@ return [
 
     'field_login' => 'Benutzername oder E-Mail-Adresse',
     'field_username' => 'Name',
+    'username_forbidden_chars' => 'Der Name darf die Zeichen < > " \' & nicht enthalten.',
     'field_fullname' => 'Vollständiger Name',
     'field_password' => 'Passwort',
     'field_new_password' => 'Neues Passwort',

@@ -6,21 +6,21 @@
     <p class="text-center px-5">{lang 'auth.form_login_subtitle'}</p>
 
     {if $kicked_message}
-        <p class="form-message text-center text-warning">{$kicked_message}</p>
+        <p class="form-message text-center text-warning">{$kicked_message|escape}</p>
     {/if}
 
     {if $success_message}
-        <p class="form-message text-center text-success" pb-message>{$success_message}</p>
+        <p class="form-message text-center text-success" pb-message>{$success_message|escape}</p>
     {elseif $error_message}
-        <p class="form-message text-center text-error text-danger" pb-message>{$error_message}</p>
+        <p class="form-message text-center text-error text-danger" pb-message>{$error_message|escape}</p>
     {else}
         <p class="form-message text-center d-none" pb-message></p>
     {/if}
 
     <div class="form-group mb-3">
         <label class="mb-2" for="username">{lang 'auth.field_login'}</label>
-        <input type="text" name="username" id="username" class="form-control{if $errors.username} is-invalid{/if}" value="{$old_input.username}" required>
-        <span class="invalid-feedback" data-error="username">{$errors.username}</span>
+        <input type="text" name="username" id="username" class="form-control{if $errors.username} is-invalid{/if}" value="{$old_input.username|escape}" required>
+        <span class="invalid-feedback" data-error="username">{$errors.username|escape}</span>
     </div>
 
     <div class="form-group mb-3">
@@ -29,7 +29,7 @@
             <a class="text-dark" href="{route 'pageForgotPassword'}">{lang 'auth.forgot_password'}</a>
         </div>
         <input type="password" name="password" id="password" class="form-control{if $errors.password} is-invalid{/if}" required>
-        <span class="invalid-feedback" data-error="password">{$errors.password}</span>
+        <span class="invalid-feedback" data-error="password">{$errors.password|escape}</span>
     </div>
 
     <div class="form-group mb-3 form-check">

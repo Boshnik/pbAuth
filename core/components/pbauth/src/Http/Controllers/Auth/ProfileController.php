@@ -39,15 +39,27 @@ class ProfileController extends AuthController
         $user = $this->modx->user;
         $profile = $user->getOne('Profile');
 
-        $validated = $request->validate(Config::rules('profile', [
-            ':user_id' => $user->id,
-            ':profile_id' => $profile->id,
-        ]));
+        // Своё сообщение на `regex`: общее у валидатора говорит «неверный
+        // формат», и набравший `Иван & Co` не узнает, что мешает амперсанд.
+        $validated = $request->validate(
+            Config::rules('profile', [
+                ':user_id' => $user->id,
+                ':profile_id' => $profile->id,
+            ]),
+            ['username.regex' => lang('auth.username_forbidden_chars')]
+        );
 
+        // Путь к аватару ставит сервер, и только он. Форма присылает намерение
+        // - файл или отметку «удалить», - а не путь: присланный путь означал
+        // бы, что картинку в чужом профиле выбирает тот, кто отправил запрос.
+        // Третий случай - не трогать: ключа в `$validated` нет, и `fromArray()`
+        // оставляет сохранённое как есть.
         if ($request->hasFile('newphoto')) {
             $path = strtr(Config::get('avatar_path'), [':user_id' => $user->id]);
             $photo = $request->file('newphoto')->store($path);
             $validated['photo'] = $photo['url'];
+        } elseif ($request->input('delete_photo')) {
+            $validated['photo'] = '';
         }
 
         $user->fromArray($validated);

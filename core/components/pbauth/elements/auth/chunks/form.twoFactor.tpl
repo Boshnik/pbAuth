@@ -1,7 +1,7 @@
 {if $success_message}
-    <p class="form-message text-success" pb-message>{$success_message}</p>
+    <p class="form-message text-success" pb-message>{$success_message|escape}</p>
 {elseif $error_message}
-    <p class="form-message text-error text-danger" pb-message>{$error_message}</p>
+    <p class="form-message text-error text-danger" pb-message>{$error_message|escape}</p>
 {/if}
 
 {if $backup_codes}
@@ -11,7 +11,7 @@
         <p class="mb-3 small">{lang 'auth.two_factor_codes_warning'}</p>
         <ul class="list-unstyled font-monospace mb-0">
             {foreach $backup_codes as $code}
-                <li>{$code}</li>
+                <li>{$code|escape}</li>
             {/foreach}
         </ul>
     </div>
@@ -22,7 +22,7 @@
     <div class="border rounded-4 p-4 mb-4">
         <h4>{lang 'auth.two_factor_settings_title'}</h4>
         <p class="text-success mb-2">{lang 'auth.two_factor_is_on'}</p>
-        <p class="small mb-0">{lang 'auth.two_factor_codes_left'}: {$backup_codes_left}</p>
+        <p class="small mb-0">{lang 'auth.two_factor_codes_left'}: {$backup_codes_left|escape}</p>
     </div>
 
     <form class="border rounded-4 p-4 mb-4" action="{route 'twoFactorBackupCodes'}" method="post" pb-form>
@@ -32,7 +32,7 @@
         <div class="form-group mb-3">
             <label class="mb-2" for="regen_password">{lang 'auth.field_current_password'}</label>
             <input type="password" name="password" id="regen_password" class="form-control{if $errors.password} is-invalid{/if}" required>
-            <span class="invalid-feedback" data-error="password">{$errors.password}</span>
+            <span class="invalid-feedback" data-error="password">{$errors.password|escape}</span>
         </div>
         <button type="submit" class="btn btn-outline-dark">
             <span class="spinner spinner-border spinner-border-sm" pb-spinner style="display:none" aria-hidden="true"></span>
@@ -72,9 +72,9 @@
                    секрет вводят руками - он рядом, разбит по четыре знака.
                    Хотите QR - нарисуйте его любой JS-библиотекой из этого uri. *}
                 <p class="mt-2 mb-1">
-                    <a href="{$otpauth_uri}" data-pbauth-totp-uri="{$otpauth_uri}">{lang 'auth.two_factor_open_app'}</a>
+                    <a href="{$otpauth_uri|escape}" data-pbauth-totp-uri="{$otpauth_uri|escape}">{lang 'auth.two_factor_open_app'}</a>
                 </p>
-                <p class="font-monospace border rounded p-2 mb-0 d-inline-block">{$secret_readable}</p>
+                <p class="font-monospace border rounded p-2 mb-0 d-inline-block">{$secret_readable|escape}</p>
             </li>
             <li>
                 {lang 'auth.two_factor_step_code'}
@@ -85,7 +85,7 @@
             <label class="mb-2" for="code">{lang 'auth.field_code'}</label>
             <input type="text" name="code" id="code" class="form-control{if $errors.code} is-invalid{/if}"
                    inputmode="numeric" autocomplete="one-time-code" placeholder="000000" maxlength="6" required>
-            <span class="invalid-feedback" data-error="code">{$errors.code}</span>
+            <span class="invalid-feedback" data-error="code">{$errors.code|escape}</span>
         </div>
 
         <button type="submit" class="btn btn-dark">

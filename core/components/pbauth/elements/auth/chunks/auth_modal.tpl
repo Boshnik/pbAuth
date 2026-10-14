@@ -1,11 +1,11 @@
 {auth}
     <a href="{route 'pageProfile'}" class="d-flex align-items-center gap-2 text-dark text-decoration-none">
         <div class="avatar d-flex align-items-center justify-content-center rounded-5 bg-secondary-subtle overflow-hidden" style="width:48px;height:48px">
-            <img src="{($modx->user->Profile->photo ?: $modx->user->getGravatar())}" width="48" height="48" alt="{$modx->user->username}">
+            <img src="{($modx->user->Profile->photo ?: $modx->user->getGravatar())|escape}" width="48" height="48" alt="{$modx->user->username|escape}">
         </div>
         <div class="d-flex flex-column">
-            <strong>{$modx->user->username}</strong>
-            <span>{$modx->user->Profile->email}</span>
+            <strong>{$modx->user->username|escape}</strong>
+            <span>{$modx->user->Profile->email|escape}</span>
         </div>
     </a>
 {/auth}

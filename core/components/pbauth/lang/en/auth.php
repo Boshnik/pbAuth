@@ -38,6 +38,7 @@ return [
 
     'field_login' => 'Login or Email address',
     'field_username' => 'Name',
+    'username_forbidden_chars' => 'The name cannot contain the characters < > " \' &',
     'field_fullname' => 'Fullname',
     'field_password' => 'Password',
     'field_new_password' => 'New password',

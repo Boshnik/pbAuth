@@ -5,9 +5,9 @@
     <p class="text-center px-5">{lang 'auth.form_change_password_subtitle'}</p>
 
     {if $success_message}
-        <p class="form-message text-center text-success" pb-message>{$success_message}</p>
+        <p class="form-message text-center text-success" pb-message>{$success_message|escape}</p>
     {elseif $error_message}
-        <p class="form-message text-center text-error text-danger" pb-message>{$error_message}</p>
+        <p class="form-message text-center text-error text-danger" pb-message>{$error_message|escape}</p>
     {else}
         <p class="form-message text-center d-none" pb-message></p>
     {/if}
@@ -15,13 +15,13 @@
     <div class="form-group mb-3">
         <label class="mb-2" for="old_password">{lang 'auth.field_current_password'}</label>
         <input type="password" name="old_password" id="old_password" class="form-control{if $errors.old_password} is-invalid{/if}" required>
-        <span class="invalid-feedback" data-error="old_password">{$errors.old_password}</span>
+        <span class="invalid-feedback" data-error="old_password">{$errors.old_password|escape}</span>
     </div>
 
     <div class="form-group mb-3">
         <label class="mb-2" for="password">{lang 'auth.field_new_password'}</label>
         <input type="password" name="password" id="password" class="form-control{if $errors.password} is-invalid{/if}" required>
-        <span class="invalid-feedback" data-error="password">{$errors.password}</span>
+        <span class="invalid-feedback" data-error="password">{$errors.password|escape}</span>
     </div>
 
     <div class="form-group mb-3">
