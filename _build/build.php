@@ -198,6 +198,36 @@ class pbAuthPackage
         }
     }
 
+    /**
+     * pack() leaves the archive in the core of the installation the build went
+     * through. Put a copy next to the sources, so the release does not have to
+     * be fished out of someone's site.
+     */
+    protected function copyToPackages()
+    {
+        $name = $this->builder->getSignature() . '.transport.zip';
+        $source = MODX_CORE_PATH . 'packages/' . $name;
+        $target = $this->config['root'] . '_packages/';
+
+        if (!file_exists($source)) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Built package not found at ' . $source);
+
+            return;
+        }
+        if (!is_dir($target) && !mkdir($target, 0755, true)) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Could not create ' . $target);
+
+            return;
+        }
+        if (!copy($source, $target . $name)) {
+            $this->modx->log(modX::LOG_LEVEL_ERROR, 'Could not copy package to ' . $target . $name);
+
+            return;
+        }
+
+        $this->modx->log(modX::LOG_LEVEL_INFO, 'Package is in ' . $target . $name);
+    }
+
     public function process()
     {
         // Add elements
@@ -258,6 +288,7 @@ class pbAuthPackage
 
         /* zip up package */
         $this->builder->pack();
+        $this->copyToPackages();
 
         if (!empty($this->config['install'])) {
             $this->install();
@@ -270,9 +301,22 @@ class pbAuthPackage
 
 /** @var array $config */
 if (!file_exists(dirname(__FILE__) . '/config.inc.php')) {
-    exit('Could not load MODX config. Please specify correct MODX_CORE_PATH constant in config file!');
+    echo 'Could not load build config at ' . dirname(__FILE__) . '/config.inc.php' . PHP_EOL;
+    exit(1);
 }
 $config = require(dirname(__FILE__) . '/config.inc.php');
+
+// config.inc.php finds MODX by walking up from _build, and when there is no
+// installation above it the walk still yields a path. Say so here, instead of
+// letting initialize('mgr') fail on a path that does not exist.
+if (!file_exists(MODX_CORE_PATH . 'model/modx/modx.class.php')) {
+    echo 'MODX not found. MODX_CORE_PATH = ' . MODX_CORE_PATH . PHP_EOL;
+    echo 'Searched for core/config/config.inc.php upwards from ' . dirname(__FILE__) . ' and found none.' . PHP_EOL;
+    echo 'Please specify correct MODX_CORE_PATH constant in _build/config.inc.php,'
+        . ' or run the build from a checkout inside a MODX installation.' . PHP_EOL;
+    exit(1);
+}
+
 $install = new pbAuthPackage(MODX_CORE_PATH, $config);
 $builder = $install->process();
 

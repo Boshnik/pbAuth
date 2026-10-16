@@ -13,8 +13,11 @@ return [
     'name_lower' => 'pbauth',
     'version' => '1.1.1',
     'release' => 'pl',
-    // Install package to site right after build
-    'install' => true,
+    // Install package to site right after build.
+    // Stays false in the repository: the build finds its MODX by walking up from
+    // _build, so a checkout inside a site tree would install into that site
+    // without asking. Switch it on locally when that is what you want.
+    'install' => false,
     // Which elements should be updated on package upgrade
     'update' => [
         'settings' => false,
