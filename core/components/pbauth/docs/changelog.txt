@@ -22,7 +22,13 @@
  - the linked-networks list is assembled once, and a test checks the assembly
 
 ### Upgrading
- - nothing to do
+ - the upgrade now replaces the form chunks and page templates in
+   `core/App/elements/` that the site had not edited. Without it the escaping
+   fixes above would only ever reach a fresh install: the page is rendered from
+   the copy in `App/`, not from the one inside the component
+ - a file the site had edited is left exactly as it is and named in the
+   installer log, one line per file. It still carries the old markup — compare
+   it with `core/components/pbauth/elements/` by hand
  - accounts stuck inactive are activated on the owner's next social sign-in
  - a green installer console does not mean migrations ran — read the log
  - names already stored with markup stay as they are in the database, but are
