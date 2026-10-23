@@ -21,7 +21,15 @@ return [
     // Which elements should be updated on package upgrade
     'update' => [
         'settings' => false,
-        'symlinks' => true,
+        // Off on purpose, as in PageBlocks and pbShop. The symlinks_after
+        // resolver replaces Extras/pbAuth/core|assets with links into the
+        // installed component, and after that an edit in the build tree is an
+        // edit of the live one. A staging site is there to show what a buyer
+        // sees, and that only happens when the component arrives by package
+        // install rather than by link. Need the links locally — switch it on in
+        // your own copy; the resolver no longer deletes a real directory at any
+        // value of this flag, and that is what actually protects the sources.
+        'symlinks' => false,
     ],
     // Which elements should be static by default
     'static' => [],
