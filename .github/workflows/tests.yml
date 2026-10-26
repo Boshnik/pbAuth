@@ -1,0 +1,152 @@
+name: Тесты
+
+# Тесты pbAuth - самостоятельные скрипты в корне tests/, по скрипту на
+# утверждение, и гоняются они здесь как есть: циклом, а не через phpunit.
+# Довод записан в docs/tests.md - коротко, скрипты уже печатают каждую проверку
+# строкой и возвращают код выхода, то есть phpunit добавил бы форму, а не
+# сторожа. Что порт всё-таки стоит сделать - там же, по условию.
+#
+# Два задания неспроста: тесты идут на php раннера (8.3 - эта версия стоит и на
+# деве, и на боевом), а синтаксис дополнительно проверяется на 8.0 - ниже этой
+# версии composer.json компонента не заявляет, и писать 8.3-синтаксис нам
+# нельзя.
+#
+# Своего vendor/ у компонента нет: composer.json объявляет только PSR-4, а
+# Fenom приходит из установленного рядом PageBlocks. Поднимать PageBlocks ради
+# тестов не надо - движок ставится composer'ом тестов тем же пакетом
+# (pageblocks/fenom) той же версии, что уедет в поставку.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'core/components/pbauth/**'
+      - '_build/**'
+      - 'tests/**'
+      - '.github/workflows/tests.yml'
+  pull_request:
+    paths:
+      - 'core/components/pbauth/**'
+      - '_build/**'
+      - 'tests/**'
+      - '.github/workflows/tests.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Тесты
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Версия php
+        run: php -v
+
+      # Лок тестов закоммичен намеренно: ставится install'ом, то есть на
+      # раннере собирается ровно то, что проверено на машине. Этим здесь
+      # отличаемся от pbShop - там composer.lock запрещён .gitignore'ом на весь
+      # репозиторий, и тестам приходится обходиться update'ом.
+      - name: Кэш composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('tests/composer.lock') }}
+          restore-keys: composer-
+
+      # Лок против composer.json: разошлись - значит кто-то правил зависимости
+      # и не обновил лок, и CI ставит не то, что проверялось руками.
+      - name: Зависимости согласованы
+        working-directory: tests
+        run: composer validate --no-check-publish --no-check-all
+
+      - name: Зависимости тестов
+        working-directory: tests
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      # Код выхода скрипта: 0 - прошёл, 2 - пропущен и сам сказал почему,
+      # остальное - провал. Цикл не обрывается на первом провале: интересно,
+      # сколько проверок красные, а не какая первая. Падает задание в конце.
+      #
+      # Пропуск печатается и считается отдельно. Проверка, которой нечем
+      # прогнаться на раннере, обязана назвать, чего ей не хватает, а не
+      # считаться пройденной: зелёное задание должно означать «прогнались», а
+      # не «ничего не запустилось».
+      - name: Тесты
+        run: |
+          set -uo pipefail
+
+          total=$(ls tests/*.php 2>/dev/null | wc -l)
+          if [ "$total" -eq 0 ]; then
+            echo "::error::в tests/ нет ни одного скрипта - проверять нечего, это ошибка"
+            exit 1
+          fi
+
+          passed=0
+          skipped=0
+          failed=0
+          report=""
+
+          for test in tests/*.php; do
+            echo "::group::$test"
+            php "$test"
+            code=$?
+            echo "::endgroup::"
+
+            case "$code" in
+              0)
+                passed=$((passed + 1))
+                report="${report}  прошёл   ${test}"$'\n'
+                ;;
+              2)
+                skipped=$((skipped + 1))
+                report="${report}  ПРОПУСК  ${test}"$'\n'
+                echo "::notice file=${test}::проверка пропущена, причину она напечатала в своём логе"
+                ;;
+              *)
+                failed=$((failed + 1))
+                report="${report}  ПРОВАЛ   ${test} (код ${code})"$'\n'
+                echo "::error file=${test}::тест провалился, код выхода ${code}"
+                ;;
+            esac
+          done
+
+          echo
+          echo "Итог: прошло ${passed}, пропущено ${skipped}, провалилось ${failed} из ${total}"
+          printf '%s' "$report"
+
+          test "$failed" -eq 0
+
+  syntax:
+    name: Синтаксис 8.0
+    runs-on: ubuntu-latest
+    # Официальный образ php, а не сторонний action: из внешнего здесь берём
+    # только actions/*.
+    container: php:8.0-cli
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Версия php
+        run: php -v
+
+      # Новее заявленного синтаксис валит сайт целиком, а не одну страницу,
+      # поэтому проверяется каждый файл поставки и сборки.
+      - name: php -l
+        run: |
+          set -euo pipefail
+          count=0
+          fails=0
+          while IFS= read -r -d '' file; do
+            count=$((count + 1))
+            if ! out=$(php -l "$file" 2>&1); then
+              echo "::error file=$file::${out}"
+              fails=$((fails + 1))
+            fi
+          done < <(find core _build -name '*.php' -not -path '*/vendor/*' -print0)
+
+          echo "проверено файлов: $count, с ошибками: $fails"
+          test "$count" -gt 0 || { echo "::error::ни одного файла не нашлось - проверять нечего, это ошибка"; exit 1; }
+          test "$fails" -eq 0

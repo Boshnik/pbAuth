@@ -1,0 +1,11 @@
+{
+    "name": "boshnik/pbauth-tests",
+    "description": "Зависимости тестов pbAuth. Лежат вне core/ и assets/ намеренно: пакет собирается из этих двух каталогов, и vendor/ тестов уехал бы в поставку.",
+    "license": "GPL-2.0-or-later",
+    "require-dev": {
+        "pageblocks/fenom": "^1.0"
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}

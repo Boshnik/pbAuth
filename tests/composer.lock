@@ -1,0 +1,74 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "790d1d49032d86cd1341df297eb66332",
+    "packages": [],
+    "packages-dev": [
+        {
+            "name": "pageblocks/fenom",
+            "version": "v1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Boshnik/pbFenom.git",
+                "reference": "e0dfd519eb80efac562212a95677a57cc7193f8c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Boshnik/pbFenom/zipball/e0dfd519eb80efac562212a95677a57cc7193f8c",
+                "reference": "e0dfd519eb80efac562212a95677a57cc7193f8c",
+                "shasum": ""
+            },
+            "require": {
+                "ext-tokenizer": "*",
+                "php": ">=8.2.0"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^10.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "pbFenom\\": "src/pbFenom"
+                },
+                "classmap": [
+                    "src/pbFenom.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Ivan Shalganov",
+                    "email": "a.cobest@gmail.com",
+                    "role": "Original author"
+                }
+            ],
+            "description": "pbFenom — hardened Fenom fork for PageBlocks (isolated namespace, security fixes, linear-time compiler)",
+            "keywords": [
+                "fenom",
+                "template",
+                "templater",
+                "templating"
+            ],
+            "support": {
+                "issues": "https://github.com/Boshnik/pbFenom/issues",
+                "source": "https://github.com/Boshnik/pbFenom/tree/v1.0.2"
+            },
+            "time": "2026-09-06T16:17:02+00:00"
+        }
+    ],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}

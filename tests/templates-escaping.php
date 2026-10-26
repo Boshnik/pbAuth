@@ -27,7 +27,25 @@
  *   php tests/templates-escaping.php
  */
 
-$fenomSrc = '/home/boshnik/Projects/Femom/src/';
+/**
+ * Движок приходит composer'ом тестов (`pageblocks/fenom`) - тем же пакетом той
+ * же версии, что уедет в поставку, и он есть на раннере, где каталога с
+ * исходниками pbFenom не существует.
+ *
+ * Раньше здесь стоял путь к чекауту на моей машине, а его отсутствие считалось
+ * пропуском. На раннере это означало бы «замер и сборка не прогнались» молча -
+ * то есть зелёную галочку без главной половины проверки.
+ */
+$vendor = __DIR__ . '/vendor/autoload.php';
+
+if (!is_readable($vendor)) {
+    fwrite(STDERR, "Нет зависимостей тестов: запустите composer install в tests/.\n");
+
+    exit(1);
+}
+
+require $vendor;
+
 $dir = __DIR__ . '/../core/components/pbauth/elements/';
 
 $fail = 0;
@@ -127,147 +145,137 @@ sort($templates);
 
 echo '--- Движок сам не экранирует ---', PHP_EOL;
 
-if (!file_exists($fenomSrc . 'pbFenom.php')) {
-    echo 'Fenom не найден (' . $fenomSrc . ") - замер и сборка пропущены\n";
-    $fenom = null;
-} else {
-    require $fenomSrc . 'pbFenom.php';
+// Отсутствие движка - провал, а не пропуск: он лежит в зависимостях теста,
+// и без него эта половина проверки ничего не доказывает.
+if (!class_exists(pbFenom::class)) {
+    fwrite(STDERR, "Нет pageblocks/fenom: запустите composer install в tests/.\n");
 
-    spl_autoload_register(static function (string $class) use ($fenomSrc): void {
-        if (!str_starts_with($class, 'pbFenom\\')) {
-            return;
-        }
-
-        $file = $fenomSrc . str_replace('\\', '/', $class) . '.php';
-
-        if (file_exists($file)) {
-            require_once $file;
-        }
-    });
-
-    class_alias(pbFenom::class, 'Fenom');
-
-    /** Дописывает `.tpl`, как FileProvider PageBlocks. */
-    class AuthProvider extends pbFenom\Provider
-    {
-        protected function _getTemplatePath(string $tpl): string
-        {
-            if (!preg_match('/\.(tpl|html)$/', $tpl)) {
-                $tpl .= '.tpl';
-            }
-
-            return parent::_getTemplatePath($tpl);
-        }
-    }
-
-    $cache = sys_get_temp_dir() . '/pbauth-esc-' . getmypid() . '/';
-    $probe = sys_get_temp_dir() . '/pbauth-probe-' . getmypid() . '/';
-    mkdir($cache, 0777, true);
-    mkdir($probe, 0777, true);
-
-    // Нагрузка на выход из атрибута: так же, как она работала в поиске pbShop.
-    $payload = '" autofocus onfocus=alert(document.domain) x="';
-    $breakout = '" autofocus';
-
-    file_put_contents($probe . 'bare.tpl', '<input value="{$q}">');
-
-    // Настройки повторяют View PageBlocks - см. View::init(). `auto_escape`
-    // там не передаётся, и именно это здесь и замеряется.
-    $options = [
-        'auto_reload' => true,
-        'force_compile' => true,
-        'disable_cache' => false,
-        'force_include' => true,
-        'force_verify' => true,
-    ];
-
-    $probeFenom = Fenom::factory(new AuthProvider($probe), $cache, $options);
-
-    check(
-        'без |escape нагрузка выходит из атрибута',
-        str_contains($probeFenom->fetch('bare.tpl', ['q' => $payload]), $breakout),
-        'движок стал экранировать сам - сплошное правило ниже можно снимать'
-    );
-
-    $fenom = Fenom::factory(new AuthProvider($dir), $cache, $options);
-    $fenom->addProvider('file', new AuthProvider($dir));
-
-    // Заглушки: регистрирует их View PageBlocks, без них шаблон не собирается.
-    foreach (['config', 'trim'] as $modifier) {
-        $fenom->addModifier($modifier, static fn($value = '', ...$rest) => (string) $value);
-    }
-
-    // `route` и `lang` PageBlocks заводит **дважды** - модификатором
-    // (`View::modifiers()`) и тегом (`View::addFunctions()`), - и формы это
-    // разные: `{route 'login'}` разбирается тегом, `{route('x', [...])}` -
-    // вызовом. Заглушка обязана повторять обе, иначе тест врёт в обе стороны:
-    // объявляет поломкой рабочий вызов и пропускает нерабочий тег с запятой.
-    foreach (['route', 'lang'] as $modifier) {
-        $fenom->addModifier($modifier, static fn($name = '', ...$rest) => (string) $name);
-    }
-
-    foreach (['lang', 'route', 'csrf', 'csrf_token'] as $function) {
-        $fenom->addFunction($function, static fn() => '');
-    }
-
-    foreach (['auth', 'guest', 'admin'] as $block) {
-        $fenom->addBlockFunction($block, static fn(array $params, $content) => $content);
-    }
-
-    echo PHP_EOL, '--- Шаблоны собираются ---', PHP_EOL;
-
-    foreach ($templates as $path) {
-        $name = str_replace($dir, '', $path);
-
-        try {
-            $fenom->compile($name);
-            check($name, true);
-        } catch (\Throwable $e) {
-            check($name, false, $e->getMessage());
-        }
-    }
-
-    echo PHP_EOL, '--- Профиль печатает присланное экранированным ---', PHP_EOL;
-
-    // Проверка не на текст шаблона, а на то, что он печатает. Профиль - то
-    // самое место, куда смотрит администратор, вошедший под пользователем.
-    $rendered = $fenom->fetch('auth/chunks/form.profile.tpl', [
-        'old_input' => [
-            'username' => $payload,
-            'fullname' => $payload,
-            'email' => $payload,
-            'phone' => $payload,
-        ],
-        'up' => (object) ['fullname' => '', 'email' => '', 'phone' => ''],
-        'errors' => [],
-        'photo' => $payload,
-        'avatar' => $payload,
-        // Заглушка пользователя, а не stdClass: шаблон зовёт `getGravatar()`
-        // и читает `Profile`, и без них падает на рантайме.
-        'modx' => (object) ['user' => new ProfileUserStub($payload)],
-        'success_message' => '',
-        'error_message' => '',
-        'social_providers' => [],
-        'social_linked' => [],
-    ]);
-
-    check(
-        'form.profile.tpl не выпускает нагрузку из атрибута',
-        !str_contains($rendered, $breakout),
-        'присланное печатается сырым в value'
-    );
-
-    check(
-        'нагрузка в нём экранирована, а не выброшена',
-        str_contains($rendered, '&quot; autofocus'),
-        'значение потерялось - проверка ничего не доказывает'
-    );
-
-    array_map('unlink', glob($cache . '*'));
-    array_map('unlink', glob($probe . '*'));
-    @rmdir($cache);
-    @rmdir($probe);
+    exit(1);
 }
+
+class_alias(pbFenom::class, 'Fenom');
+
+/** Дописывает `.tpl`, как FileProvider PageBlocks. */
+class AuthProvider extends pbFenom\Provider
+{
+    protected function _getTemplatePath(string $tpl): string
+    {
+        if (!preg_match('/\.(tpl|html)$/', $tpl)) {
+            $tpl .= '.tpl';
+        }
+
+        return parent::_getTemplatePath($tpl);
+    }
+}
+
+$cache = sys_get_temp_dir() . '/pbauth-esc-' . getmypid() . '/';
+$probe = sys_get_temp_dir() . '/pbauth-probe-' . getmypid() . '/';
+mkdir($cache, 0777, true);
+mkdir($probe, 0777, true);
+
+// Нагрузка на выход из атрибута: так же, как она работала в поиске pbShop.
+$payload = '" autofocus onfocus=alert(document.domain) x="';
+$breakout = '" autofocus';
+
+file_put_contents($probe . 'bare.tpl', '<input value="{$q}">');
+
+// Настройки повторяют View PageBlocks - см. View::init(). `auto_escape`
+// там не передаётся, и именно это здесь и замеряется.
+$options = [
+    'auto_reload' => true,
+    'force_compile' => true,
+    'disable_cache' => false,
+    'force_include' => true,
+    'force_verify' => true,
+];
+
+$probeFenom = Fenom::factory(new AuthProvider($probe), $cache, $options);
+
+check(
+    'без |escape нагрузка выходит из атрибута',
+    str_contains($probeFenom->fetch('bare.tpl', ['q' => $payload]), $breakout),
+    'движок стал экранировать сам - сплошное правило ниже можно снимать'
+);
+
+$fenom = Fenom::factory(new AuthProvider($dir), $cache, $options);
+$fenom->addProvider('file', new AuthProvider($dir));
+
+// Заглушки: регистрирует их View PageBlocks, без них шаблон не собирается.
+foreach (['config', 'trim'] as $modifier) {
+    $fenom->addModifier($modifier, static fn($value = '', ...$rest) => (string) $value);
+}
+
+// `route` и `lang` PageBlocks заводит **дважды** - модификатором
+// (`View::modifiers()`) и тегом (`View::addFunctions()`), - и формы это
+// разные: `{route 'login'}` разбирается тегом, `{route('x', [...])}` -
+// вызовом. Заглушка обязана повторять обе, иначе тест врёт в обе стороны:
+// объявляет поломкой рабочий вызов и пропускает нерабочий тег с запятой.
+foreach (['route', 'lang'] as $modifier) {
+    $fenom->addModifier($modifier, static fn($name = '', ...$rest) => (string) $name);
+}
+
+foreach (['lang', 'route', 'csrf', 'csrf_token'] as $function) {
+    $fenom->addFunction($function, static fn() => '');
+}
+
+foreach (['auth', 'guest', 'admin'] as $block) {
+    $fenom->addBlockFunction($block, static fn(array $params, $content) => $content);
+}
+
+echo PHP_EOL, '--- Шаблоны собираются ---', PHP_EOL;
+
+foreach ($templates as $path) {
+    $name = str_replace($dir, '', $path);
+
+    try {
+        $fenom->compile($name);
+        check($name, true);
+    } catch (\Throwable $e) {
+        check($name, false, $e->getMessage());
+    }
+}
+
+echo PHP_EOL, '--- Профиль печатает присланное экранированным ---', PHP_EOL;
+
+// Проверка не на текст шаблона, а на то, что он печатает. Профиль - то
+// самое место, куда смотрит администратор, вошедший под пользователем.
+$rendered = $fenom->fetch('auth/chunks/form.profile.tpl', [
+    'old_input' => [
+        'username' => $payload,
+        'fullname' => $payload,
+        'email' => $payload,
+        'phone' => $payload,
+    ],
+    'up' => (object) ['fullname' => '', 'email' => '', 'phone' => ''],
+    'errors' => [],
+    'photo' => $payload,
+    'avatar' => $payload,
+    // Заглушка пользователя, а не stdClass: шаблон зовёт `getGravatar()`
+    // и читает `Profile`, и без них падает на рантайме.
+    'modx' => (object) ['user' => new ProfileUserStub($payload)],
+    'success_message' => '',
+    'error_message' => '',
+    'social_providers' => [],
+    'social_linked' => [],
+]);
+
+check(
+    'form.profile.tpl не выпускает нагрузку из атрибута',
+    !str_contains($rendered, $breakout),
+    'присланное печатается сырым в value'
+);
+
+check(
+    'нагрузка в нём экранирована, а не выброшена',
+    str_contains($rendered, '&quot; autofocus'),
+    'значение потерялось - проверка ничего не доказывает'
+);
+
+array_map('unlink', glob($cache . '*'));
+array_map('unlink', glob($probe . '*'));
+@rmdir($cache);
+@rmdir($probe);
+
 
 echo PHP_EOL, '--- Каждая печать экранирована (правило сплошное) ---', PHP_EOL;
 
