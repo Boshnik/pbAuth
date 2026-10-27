@@ -192,7 +192,6 @@ class pbAuthPackage
             $package->save();
         }
 
-        $package->xpdo->packages['MODX\Revolution\\'] = $package->xpdo->packages['Revolution'];
         if ($package->install()) {
             $this->modx->runProcessor('System/ClearCache');
         }
