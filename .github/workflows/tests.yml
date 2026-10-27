@@ -77,6 +77,12 @@ jobs:
       # не «ничего не запустилось».
       - name: Тесты
         run: |
+          # Раннер подставляет `bash -e {0}`, а здесь обрыв на первом ненулевом
+          # коде ломает сам смысл шага: нужен итог по всем проверкам, и пропуск
+          # кодом 2 провалом не считается. С `-e` до разбора кода дело не
+          # доходит вовсе - шаг умирает на `php "$test"`. Поэтому `-e` снимается
+          # явно, а падает задание последней строкой, по счётчику провалов.
+          set +e
           set -uo pipefail
 
           total=$(ls tests/*.php 2>/dev/null | wc -l)
@@ -136,16 +142,27 @@ jobs:
       # поэтому проверяется каждый файл поставки и сборки.
       - name: php -l
         run: |
-          set -euo pipefail
+          # В контейнере раннер подставляет `sh -e {0}`, а `pipefail`,
+          # `read -r -d ''` и процесс-подстановка `done < <(find ...)` - это
+          # bash. В dash шаг умирает сразу, не проверив ни одного файла.
+          # Поэтому здесь только POSIX, и список файлов идёт через временный
+          # файл, а не конвейером: в конвейере цикл уходит в субшелл, счётчики
+          # не доживают до проверок ниже, и «проверено файлов: 0» снова прошло
+          # бы за успех.
+          set -eu
+
+          list="${RUNNER_TEMP:-/tmp}/php-files.txt"
+          find core _build -name '*.php' -not -path '*/vendor/*' > "$list"
+
           count=0
           fails=0
-          while IFS= read -r -d '' file; do
+          while IFS= read -r file; do
             count=$((count + 1))
             if ! out=$(php -l "$file" 2>&1); then
               echo "::error file=$file::${out}"
               fails=$((fails + 1))
             fi
-          done < <(find core _build -name '*.php' -not -path '*/vendor/*' -print0)
+          done < "$list"
 
           echo "проверено файлов: $count, с ошибками: $fails"
           test "$count" -gt 0 || { echo "::error::ни одного файла не нашлось - проверять нечего, это ошибка"; exit 1; }
