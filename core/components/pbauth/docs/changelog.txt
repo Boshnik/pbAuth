@@ -19,6 +19,8 @@
  - a failed migration reported success — the resolver now checks the exit code
  - the CLI binary is looked up next to `PHP_BINDIR`, not only in PATH
  - `src/phinx.php` without `config.core.php` exited with code 0
+ - the installer log carried a `PHP warning: Undefined array key "Revolution"`
+   line — the assignment behind it never did anything on MODX 3
  - the linked-networks list is assembled once, and a test checks the assembly
 
 ### Upgrading
